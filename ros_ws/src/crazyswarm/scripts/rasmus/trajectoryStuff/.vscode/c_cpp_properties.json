@@ -1,0 +1,25 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${workspaceFolder}/.vscode/browse.vc.db",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/rasmus/Documents/KTH/Master/Exjobb/code/degree-thesis/ros_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/rasmus/intro_to_robotics_ws/src/beginner_tutorials/include/**",
+        "/home/rasmus/intro_to_robotics_ws/src/learning_tf2/include/**",
+        "/home/rasmus/Documents/KTH/Master/Exjobb/code/degree-thesis/ros_ws/src/externalDependencies/libobjecttracker/include/**",
+        "/home/rasmus/intro_to_robotics_ws/src/tut2_learning_tf2/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
