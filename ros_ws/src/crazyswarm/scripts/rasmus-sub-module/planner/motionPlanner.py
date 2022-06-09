@@ -26,7 +26,7 @@ from PIL import Image
 
 from trajectory import Trajectory
 
-PRINT_AT = 250
+PRINT_AT = 5000
 
 class Planner:
   CONTROLL_BARRIER_FUNCTIONS = {
@@ -124,13 +124,19 @@ class Planner:
 
     accelerations = self.possibleAccelerations
 
-    closeDistance = 1.0
+    closeDistance = 0.5
 
     if associatedDroneState.parent is not None and associatedDroneState.parent.selectedMovement.newDistanceToGoal < closeDistance**2:
       angles = [np.deg2rad(0.0)] # Only straight
-      midAccIdx = len(accelerations) // 2
-      accelerations = accelerations[midAccIdx+1:] # Only brake
-    
+
+      accelerations = []
+
+      for acc in self.possibleAccelerations:
+        newVelocity = associatedDroneState.parent.selectedMovement.velocity + acc
+
+        if newVelocity <= 0.75:
+          accelerations.append(acc)
+
     for angle in angles:
       for acceleration in accelerations:
         newMovement = Movement(
