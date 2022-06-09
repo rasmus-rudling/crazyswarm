@@ -1,0 +1,4 @@
+idx,eps,a_max,ps,curr_best_eps,curr_best_a_max,curr_best_perceived_safety,participant_height
+0,0.64,0.96,3.0,0.1,0.1,2.772505832113275,178.0
+1,0.1,0.1,2.0,0.1,0.1,2.3872194245326632,178.0
+2,0.7,1.0,3,0.1,0.1,2.4306801257216466,178
