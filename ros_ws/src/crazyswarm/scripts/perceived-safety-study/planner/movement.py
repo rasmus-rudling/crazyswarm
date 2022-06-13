@@ -16,7 +16,6 @@ class Movement:
     np.deg2rad(5.0)
   ]
   EPSILON = 0
-  VELOCITY_MAX = 1.0
 
   def __init__(self, angle: float, acceleration: float, planner: "Planner", associatedDroneState: "DroneState") -> None:
     self.EPSILON = planner.HUMAN.radius
@@ -82,7 +81,7 @@ class Movement:
     else:
       maxVelocityForCurrentDistanceToHuman = self.planner.cbf(self.newDistanceToHuman)
 
-    droneIsNotStandingStill = self.velocity >= 0.001
+    droneIsNotStandingStill = self.velocity >= 0.1
 
     movementIsValid = approvedByCbf and droneIsNotStandingStill
     return movementIsValid

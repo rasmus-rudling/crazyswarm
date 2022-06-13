@@ -3,9 +3,11 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 import sys
+
 sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/planner')
 sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils')
 
+from globalVariables import DRONE_MAX_VELOCITY
 import seaborn as sns; sns.set_theme()
 from plotUtils import saveFig
 sns.set(font_scale=2)
@@ -16,8 +18,6 @@ class CBF:
 
   EPSILON_MIN = 0.1
   EPSILON_MAX = 0.75
-
-  VELOCITY_MAX = 1.0
 
   def __init__(self, decceleration_max, epsilon, key="cbf"):
     self.decceleration_max = decceleration_max
@@ -30,7 +30,7 @@ class CBF:
       return 0
 
     else:
-      return np.sqrt(2 * np.abs(self.decceleration_max) * (distance - self.epsilon))
+      return np.min([np.sqrt(2 * np.abs(self.decceleration_max) * (distance - self.epsilon)), DRONE_MAX_VELOCITY])
 
 
   def velocityIsApprovedForCurrentDistance(self, distance, velocity, droneRadius, humanRadius):
@@ -39,8 +39,7 @@ class CBF:
 
     minDistance = (numerator/denominator) + self.epsilon
 
-    # return distance >= minDistance  # v1
-    return distance >= (minDistance + droneRadius + humanRadius)**2  # v2
+    return distance >= (minDistance + droneRadius + humanRadius)**2  and velocity <= DRONE_MAX_VELOCITY
 
 def heuristicFunction(distance: float) -> float:
   """The heuristic controll barrier function
@@ -92,24 +91,23 @@ def plotVelocities():
   for cbf in cbfs:
     maxVelocities = np.array([cbf.maxVelocityForCurrentDistance(distance) for distance in distances])
 
-    plt.rcParams['text.usetex'] = True
     fig, ax = plt.subplots()
 
     ax.set_xlim(-0.1, totTime)
 
     fontSize = 25
 
-    ax.set_ylabel(r'velocity (\textit{m/s})', fontsize=fontSize)
-    ax.set_ylim(-0.05, CBF.VELOCITY_MAX + 0.25)
+    ax.set_ylabel(r'velocity (m/s)', fontsize=fontSize)
+    ax.set_ylim(-0.05, DRONE_MAX_VELOCITY + 0.25)
 
-    ax.set_xlabel(r'distance (\textit{m})', fontsize=fontSize)
+    ax.set_xlabel(r'distance (m)', fontsize=fontSize)
 
 
     # function = r'$v_{safe\&fast} = min(v_{max}, \sqrt[+]{2 * | a_{max} | * (d_h - \epsilon)})$'
     # values = r'$v_{max} = $ ' + str(v_max) + r', $a_{max} = $ ' + str(a_max) + r', $\epsilon = $ ' + str(e)
     # ax.set_title(f'Fastest possible velocities based on distance to human that are still safe', fontsize=fontSize)
     sns.lineplot(distances, maxVelocities, marker="o", ax=ax)
-    saveFig(fig, f"cbf - a_max={round(cbf.decceleration_max, 2)} | e={round(cbf.epsilon, 2)} | v_max={round(cbf.VELOCITY_MAX, 2)}", 30/25)
+    saveFig(fig, f"cbf - a_max={round(cbf.decceleration_max, 2)} | e={round(cbf.epsilon, 2)} | v_max={round(DRONE_MAX_VELOCITY, 2)}", 30/25)
 
   # plt.show()
   

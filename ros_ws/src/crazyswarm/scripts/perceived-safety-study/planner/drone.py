@@ -27,7 +27,7 @@ class DroneGoalState(Position):
 
 
 class DroneState(Position):
-  DRONE_INFO = DroneInfo(radius=0.1, maxVelocity=1.0, maxAcceleration=0.5)
+  DRONE_INFO = DroneInfo(radius=0.1, maxVelocity=1.5, maxAcceleration=0.5)
 
   def __init__(self, parent:"DroneState"=None, x:float=None, y:float=None, yaw:float=None) -> None:
     """Could be seen as a vertex in a graph that exist momentarily.
