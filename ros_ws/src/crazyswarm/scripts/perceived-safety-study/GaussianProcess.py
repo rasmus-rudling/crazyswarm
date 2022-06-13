@@ -34,7 +34,9 @@ MAX_INPUT_VAL = 3
 class GaussianProcess:
   NUM_VALUES = 50
 
-  def __init__(self):
+  SF_CSV_PATH = None
+
+  def __init__(self, currentParticipantHeight=None, safetyFunction=None):
     noise_std = 0.75
     kernel = 1 * RBF()
 
@@ -56,23 +58,31 @@ class GaussianProcess:
     self.participantHeights = []
 
     # Check if to continue from previous data
-    safetyFunction = input("Safety function name: ")
+    if safetyFunction is None:
+      safetyFunction = input("Safety function name: ")
+
     self.sfName = safetyFunction
 
     if len(sys.argv) > 1 and sys.argv[1] == "plot":
       self.currentParticipantHeight = -1
-    else:
+    elif currentParticipantHeight is None:
       self.currentParticipantHeight = int(input("Participant height (in cm): "))
+    else:
+      self.currentParticipantHeight = currentParticipantHeight
 
-    existingSafetyFunctions = [sf.split(".")[0]  for sf in os.listdir("gpData")]
+    if safetyFunction is None:
+      existingSafetyFunctions = [sf.split(".")[0]  for sf in os.listdir("gpData")]
 
-    if safetyFunction in existingSafetyFunctions:
-      self.addDataFromCsv()
-      self.updatePredictions()
-      self.updateNextValuesToAskFor()
+      if safetyFunction in existingSafetyFunctions:
+        # TODO: Lös det här för när man kommer ifrån preStudy
+        GaussianProcess.SF_CSV_PATH = f"gpData/{safetyFunction}.csv"
+
+        self.addDataFromCsv()
+        self.updatePredictions()
+        self.updateNextValuesToAskFor()
 
   def addDataFromCsv(self):
-      gpData = np.loadtxt(f"gpData/{self.sfName}.csv", delimiter=",", skiprows=1)
+      gpData = np.loadtxt(GaussianProcess.SF_CSV_PATH, delimiter=",", skiprows=1)
 
       if gpData.ndim == 1:
         gpData = np.array([gpData])

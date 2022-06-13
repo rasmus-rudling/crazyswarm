@@ -12,6 +12,8 @@ PREVIOUS_DRONE_EXPERIENCE = {
 }
 
 class Participant:
+    CSV_PATH = "participants.csv"
+
     def __init__(self, id, firstName, lastName, gender, height, previousDroneExperience, email):
         self.id = id
         self.firstName = firstName
@@ -31,7 +33,7 @@ class Participant:
         if addUser:
             allParticipants.append(self)
 
-            with open(f"participants.csv", 'w', encoding='UTF8') as f:
+            with open(Participant.CSV_PATH, 'w', encoding='UTF8') as f:
                 writer = csv.writer(f)
 
                 header = ["id", "firstName", "lastName", "gender", "height", "previousDroneExperience", "email"]
@@ -52,7 +54,7 @@ class Participant:
         
     @staticmethod
     def getIdForNewUser():
-        with open('participants.csv', newline='') as csvfile:
+        with open(Participant.CSV_PATH, newline='') as csvfile:
             participants = csv.reader(csvfile, delimiter=',')
 
             idForNewUser = len(list(participants)) - 1
@@ -61,7 +63,7 @@ class Participant:
 
     @staticmethod
     def getAllParticipants() -> list["Participant"]:
-        with open('participants.csv', newline='') as csvfile:
+        with open(Participant.CSV_PATH, newline='') as csvfile:
             participantsData = csv.reader(csvfile, delimiter=',')
         
             participants = []
@@ -137,13 +139,13 @@ class Participant:
 
 
 if __name__ == "__main__":
-    # p = Participant.fromTerminalInput()  # Create new participant
-    # p.save()
+    p = Participant.fromTerminalInput()  # Create new participant
+    p.save()
     
-    allParticipants = Participant.getAllParticipants()
+    # allParticipants = Participant.getAllParticipants()
 
-    for p in allParticipants:
-        print(p)
+    # for p in allParticipants:
+    #     print(p)
 
 
 # TODO

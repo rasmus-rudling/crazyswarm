@@ -1,20 +1,36 @@
-
-
 import sys
+
+sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study')
+sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils')
+
+from Participant import Participant
+
 from GaussianProcess import GaussianProcess
 
-def createSafetyFunction(gp: "GaussianProcess"):
-    pass
+def updateSafetyFunction():
+    userInput = input("User ID or email: ")
 
+    participantID = None
 
-def main():
-  gp = GaussianProcess()
-  
-  if len(sys.argv) <= 1:
-    gp.startProcess()
-  elif sys.argv[1] == "plot":
-    gp.plotCurrentPredictionAs3d()
+    try:
+        participantID = int(userInput)
+    except:
+        participantEmail = userInput
 
+    Participant.CSV_PATH = "../utils/participants.csv"
+
+    if participantID is not None:
+        p = Participant.getParticipantById(participantID)
+    else:
+        p = Participant.getUserByEmail(participantEmail)
+
+    GaussianProcess.SF_CSV_PATH = "" # TODO
+    gp = GaussianProcess(currentParticipantHeight=p.height, safetyFunction="sf2")
+
+    
+    for _ in range(5):
+        gp.startProcess()
+    
 
 if __name__ == "__main__":
-    main()
+    updateSafetyFunction()
