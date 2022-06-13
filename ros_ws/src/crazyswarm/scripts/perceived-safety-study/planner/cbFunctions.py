@@ -3,7 +3,9 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 import sys
-# sys.path.append("..")
+sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/planner')
+sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils')
+
 import seaborn as sns; sns.set_theme()
 from plotUtils import saveFig
 sns.set(font_scale=2)
@@ -13,7 +15,7 @@ class CBF:
   DECELERATION_MAX_MAX = 1.0
 
   EPSILON_MIN = 0.1
-  EPSILON_MAX = 0.7
+  EPSILON_MAX = 0.75
 
   VELOCITY_MAX = 1.0
 

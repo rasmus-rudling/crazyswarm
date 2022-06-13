@@ -101,7 +101,7 @@ class FlyZoneTest(unittest.TestCase):
 MOCAP_FLY_ZONE = FlyZone(
   minPos=Position(-2.2, -1.97), 
   maxPos=Position(2.3, 1.58), 
-  padding=0.2
+  padding=0.0
 )
 
 if __name__ == "__main__":

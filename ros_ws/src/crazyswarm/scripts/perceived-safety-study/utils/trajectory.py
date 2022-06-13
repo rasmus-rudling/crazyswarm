@@ -157,7 +157,7 @@ class Trajectory:
       return np.linalg.norm([x1 - x2, y1 - y2])
 
     def getDistanceToHuman(pos):
-      human = Obstacle(1.5, -1.5, 0.25) # If you change here, change in planner aswell
+      human = planner.HUMAN
 
       newDistanceToHumanCenter = euclidianDist(pos.x, pos.y, human.x, human.y)
       newDistanceToHuman = newDistanceToHumanCenter - DroneState.DRONE_INFO.radius - human.radius

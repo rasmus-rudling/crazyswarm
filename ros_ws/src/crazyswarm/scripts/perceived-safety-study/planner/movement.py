@@ -59,8 +59,6 @@ class Movement:
     else:
       maxVelocityForCurrentDistanceToHuman = self.planner.cbf(self.newDistanceToHuman)
     
-    # print(f"approvedByCbf={approvedByCbf}")
-
     willHaveReachedGoal = approvedByCbf and isEpsilonCloseToGoal and isEpsilonCloseToZeroVelocity
 
     return willHaveReachedGoal 
@@ -84,15 +82,7 @@ class Movement:
     else:
       maxVelocityForCurrentDistanceToHuman = self.planner.cbf(self.newDistanceToHuman)
 
-    droneIsNotStandingStill = self.velocity >= 0.01
-
-    # # Hard break if at goal
-    # acceleratingWhileAtGoal = self.newDistanceToGoal <= (EPSILON_CLOSE_TO_GOAL + DroneState.DRONE_INFO.radius)**2 and self.acceleration != self.planner.possibleAccelerations[-1]  # v2
-    # if acceleratingWhileAtGoal:
-    #   print(acceleratingWhileAtGoal)
-    
-    # Break if close to the goal
-    # acceleratingWhileCloseToGoal = self.newDistanceToGoal <= (0.75 + DroneState.DRONE_INFO.radius)**2 and self.velocity >= 0.5
+    droneIsNotStandingStill = self.velocity >= 0.001
 
     movementIsValid = approvedByCbf and droneIsNotStandingStill
     return movementIsValid

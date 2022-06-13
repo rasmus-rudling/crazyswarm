@@ -26,7 +26,7 @@ from PIL import Image
 
 from trajectory import Trajectory
 
-PRINT_AT = 5000
+PRINT_AT = 100
 
 class Planner:
   CONTROLL_BARRIER_FUNCTIONS = {
@@ -34,7 +34,7 @@ class Planner:
     "cbf": isApprovedByCbf
   }
 
-  HUMAN = Obstacle(1.5, -1.5, 0.25) # If you change here, change in plotting aswell
+  HUMAN = Obstacle(0.5, -0.5, 0.25) # If you change here, change in plotting aswell
 
   def __init__(self, dt: float, obstacles: List["Obstacle"], flyZone: "FlyZone", verboseLevel: int, cbf: "CBF", possibleAccelerations) -> None:
     self.dt = dt
@@ -122,9 +122,9 @@ class Planner:
       np.deg2rad(5.0)
     ]
 
-    accelerations = self.possibleAccelerations
-
     closeDistance = 0.5
+
+    accelerations = self.possibleAccelerations
 
     if associatedDroneState.parent is not None and associatedDroneState.parent.selectedMovement.newDistanceToGoal < closeDistance**2:
       angles = [np.deg2rad(0.0)] # Only straight
@@ -136,6 +136,9 @@ class Planner:
 
         if newVelocity <= 0.75:
           accelerations.append(acc)
+      
+      if len(accelerations) == 0:
+        accelerations.append(self.possibleAccelerations[-1])
 
     for angle in angles:
       for acceleration in accelerations:
@@ -153,9 +156,9 @@ class Planner:
           self.visitedMovements.add(newMovement.key)
     
     numMovements = len(self.movements)
-    # valuesToKeep = 5000
-    # startIdx = max(numMovements-valuesToKeep, 0)
-    # self.movements = self.movements[startIdx:numMovements]
+    valuesToKeep = 200
+    startIdx = max(numMovements-valuesToKeep, 0)
+    self.movements = self.movements[startIdx:numMovements]
 
     if (self.verboseLevel == 2 or self.verboseLevel == 3) and self.iterations % PRINT_AT == 0:
       print(f"#movements = {numMovements}")
