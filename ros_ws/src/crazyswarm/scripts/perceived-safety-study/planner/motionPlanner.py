@@ -26,7 +26,7 @@ from PIL import Image
 
 from trajectory import Trajectory
 
-PRINT_AT = 100
+PRINT_AT = 1000
 
 class Planner:
   CONTROLL_BARRIER_FUNCTIONS = {
@@ -34,7 +34,7 @@ class Planner:
     "cbf": isApprovedByCbf
   }
 
-  HUMAN = Obstacle(0.5, -0.5, 0.25) # If you change here, change in plotting aswell
+  HUMAN = Obstacle(0.75, -1.25, 0.25) # If you change here, change in plotting aswell
 
   def __init__(self, dt: float, obstacles: List["Obstacle"], flyZone: "FlyZone", verboseLevel: int, cbf: "CBF", possibleAccelerations) -> None:
     self.dt = dt
@@ -127,8 +127,6 @@ class Planner:
     accelerations = self.possibleAccelerations
 
     if associatedDroneState.parent is not None and associatedDroneState.parent.selectedMovement.newDistanceToGoal < closeDistance**2:
-      angles = [np.deg2rad(0.0)] # Only straight
-
       accelerations = []
 
       for acc in self.possibleAccelerations:

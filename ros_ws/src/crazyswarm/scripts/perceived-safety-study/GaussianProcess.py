@@ -1,9 +1,19 @@
 from itertools import product
 import sys
+sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils')
+
 import numpy as np
 from matplotlib import pyplot as plt
 from SimpleTrajectory import Z_HEIGHT, SimpleTrajectory
-from crazyflieController import CrazyflieController, Pose
+
+import os
+import platform
+
+USING_MAC = platform.system() == "Darwin"
+
+if not USING_MAC:
+  from crazyflieController import CrazyflieController, Pose
+
 from planner.cbFunctions import CBF
 from planner.drone import DroneGoalState, DroneState
 from planner.flyZone import MOCAP_FLY_ZONE
@@ -15,11 +25,9 @@ from trajectoryUtils import getLatestTrajectory; sns.set_theme()
 from mpl_toolkits.mplot3d import Axes3D
 
 import csv
-import os
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
-from sklearn.gaussian_process.kernels import (RationalQuadratic, Exponentiation)
 
 MAX_INPUT_VAL = 3
 
@@ -28,7 +36,7 @@ class GaussianProcess:
 
   def __init__(self):
     noise_std = 0.75
-    kernel = 1 * RBF(length_scale=MAX_INPUT_VAL*2, length_scale_bounds=(1e-2, 1e2))
+    kernel = 1 * RBF()
 
     self.gp = GaussianProcessRegressor(kernel=kernel, alpha=noise_std**2, n_restarts_optimizer=5)
     
@@ -209,13 +217,72 @@ class GaussianProcess:
     print(f"Epsilon = {self.nextEpsilonToCheck}")
     print(f"Max deceleration = {self.nextdecelerationMaxToCheck}")
     trajectoryKeys = self.findTrajectories(saveAnimation=False)
-    self.executeTrajectories(trajectoryKeys)
+    if not USING_MAC:
+      self.executeTrajectories(trajectoryKeys)
 
     safetyScore = self.getSafetyScore()
 
     self.addData(safetyScore)
     self.updateNextValuesToAskFor()
     self.plotCurrentPredictionAs3d()
+
+  def findTrajectories(self, saveAnimation):
+    cbf = CBF(decceleration_max=self.nextdecelerationMaxToCheck, epsilon=self.nextEpsilonToCheck)
+      
+    planner = Planner(
+      dt=0.1,
+      obstacles=[],
+      flyZone=MOCAP_FLY_ZONE,
+      verboseLevel=3,
+      cbf=cbf,
+      possibleAccelerations=[1.0, 0.6, 0.3, 0.0, -0.3, -0.6, -1.0]
+    )
+
+    x1, y1 = -1.75, 1.25
+    x2, y2 = planner.HUMAN.x + planner.HUMAN.radius + 0.75, planner.HUMAN.y - 0.25
+
+    currentDroneState = Position(x=x1, y=y1)
+
+    goalState = DroneGoalState(x=x2, y=y2, radius=0.1)
+
+    currentDroneState = DroneState(
+      parent=None, 
+      x=currentDroneState.x, 
+      y=currentDroneState.y,
+      yaw=planner.getYawForInitDroneState(currentDroneState, goalState)
+    )
+
+    trajectoryKeys = []
+
+    currentDroneState, foundGoalState = planner.findPathToGoal(currentDroneState, goalState)
+
+    if foundGoalState:
+      print("Found goal :)")
+      planner.setKey(currentDroneState, True)
+      try:
+        os.mkdir(f"savedTrajectories/{self.sfName}")
+      except:
+        pass
+      
+      planner.animationKey = f"{self.sfName}/Round #{len(self.safetyScores)} - " + planner.animationKey
+      filePath = f"savedTrajectories/{planner.animationKey}"
+      os.mkdir(filePath)
+
+      trajectory = Trajectory(finalDroneState=currentDroneState)
+      trajectory.plot(f"{filePath}/trajectoryPlot.png", cbf, show=False, planner=planner)
+      trajectory.saveToCsv(f"{filePath}/trajectoryData.csv")
+
+      trajectoryKeys.append(planner.animationKey)
+
+      if saveAnimation:
+        os.mkdir(f"{filePath}/animationFrames")
+       
+      else:
+         recordFinalTrajectory(currentDroneState, planner, onlyFinalFrame=True, fileName="trajectory")
+
+      planner.resetParams()
+  
+    return trajectoryKeys
 
   def executeTrajectories(self, trajectoryKeys):
     droneController = CrazyflieController()
@@ -261,65 +328,7 @@ class GaussianProcess:
       plannedTrajectory.plotTrajectory(otherTrajectory=recordingOfPlannedTrajectory, fileName=f"{pathToTrajectoryFolder}/executedTrajectory")
     
    
-  def findTrajectories(self, saveAnimation):
-    cbf = CBF(decceleration_max=self.nextdecelerationMaxToCheck, epsilon=self.nextEpsilonToCheck)
-    
-    planner = Planner(
-      dt=0.1,
-      obstacles=[],
-      flyZone=MOCAP_FLY_ZONE,
-      verboseLevel=3,
-      cbf=cbf,
-      possibleAccelerations=[0.8, 0.6, 0.2, 0.0, -0.2, -0.6, -0.8]
-      # possibleAccelerations=[0.75, 0.5, 0.25, 0.0, -0.25, -0.5, -0.75]
-    )
 
-    x1, y1 = -1.5, 1.0
-    x2, y2 = 1.0, -1.0
-
-    goalStates = [
-      DroneGoalState(x=x2, y=y2, radius=0.1),
-    ]
-
-    startingStates = [
-      DroneState(
-        parent=None, 
-        x=x1, 
-        y=y1,
-        yaw=planner.getYawForInitDroneState(Position(x1, y1), goalStates[0])
-      ),
-    ]
-
-    trajectoryKeys = []
-
-    for i in range(len(goalStates)):
-      currentDroneState, foundGoalState = planner.findPathToGoal(startingStates[i], goalStates[i])
-
-      if foundGoalState:
-        print("Found goal :)")
-        planner.setKey(currentDroneState, True)
-        try:
-          os.mkdir(f"savedTrajectories/{self.sfName}")
-        except:
-          pass
-        
-        planner.animationKey = f"{self.sfName}/Round #{len(self.safetyScores)} - " + planner.animationKey
-        filePath = f"savedTrajectories/{planner.animationKey}"
-        os.mkdir(filePath)
-
-        trajectory = Trajectory(finalDroneState=currentDroneState)
-        trajectory.plot(f"{filePath}/trajectoryPlot.png", cbf, show=False)
-        trajectory.saveToCsv(f"{filePath}/trajectoryData.csv")
-
-        trajectoryKeys.append(planner.animationKey)
-
-        if saveAnimation:
-          os.mkdir(f"{filePath}/animationFrames")
-          recordFinalTrajectory(currentDroneState, planner)
-
-      planner.resetParams()
-  
-    return trajectoryKeys
 
 def main():
   pt = GaussianProcess()

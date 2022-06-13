@@ -132,7 +132,10 @@ def savePlot(fig: Figure, folderNameForAnimation, animationName, saveInRoot=Fals
   # fig.savefig(f"animationFrames/{folderNameForAnimation}/{animationNum}.png", format='png', dpi=144)
 
   if saveInRoot:
-    fig.savefig(f"../savedTrajectories/comparisons/{folderNameForAnimation}/{animationName}.png", format='png', dpi=120)
+    try:
+      fig.savefig(f"../savedTrajectories/comparisons/{folderNameForAnimation}/{animationName}.png", format='png', dpi=120)
+    except:
+      fig.savefig(f"savedTrajectories/{folderNameForAnimation}/{animationName}.png", format='png', dpi=120)
   else:
     fig.savefig(f"savedTrajectories/{folderNameForAnimation}/animationFrames/{animationName}.png", format='png', dpi=120)
 
