@@ -190,22 +190,11 @@ class GaussianProcess:
       rstride=1, cstride=1, cmap='viridis', edgecolor='none'
     )
 
-    # bestEpsIdx, bestDecMaxIdx = self.bestParameterPair[-1]
-
-    # N=50
-    # stride=1
-    # u = np.linspace(0, 2 * np.pi, N)
-    # v = np.linspace(0, np.pi, N)
-    # eps = (np.outer(np.cos(u), np.sin(v)) / 30) + bestEpsIdx
-    # y = (np.outer(np.sin(u), np.sin(v)) / 30) + bestDecMaxIdx
-    # z = (np.outer(np.ones(np.size(u)), np.cos(v))) + self.bestPerceivedSafety[-1]
-    # ax.plot_surface(eps, y, z, linewidth=0.0, cstride=stride, rstride=stride)
-    # ax.set_title('{0}x{0} data points, stride={1}'.format(N,stride))
-
     plt.draw()
 
     if len(sys.argv) > 1 and sys.argv[1] == "plot":
       plt.pause(9999999999999)
+
     plt.show()
 
   def getperceivedSafety(self):
@@ -281,7 +270,7 @@ class GaussianProcess:
       
       dirs = self.savedTrajectoriesDir.split("/")
 
-      planner.animationKey = f"{dirs[-1]}/Round #{len(self.perceivedSafety)} - " + planner.animationKey
+      planner.animationKey = f"{dirs[-1]}/Round #{len(self.perceivedSafety)}.{self.currentParticipant.id} - " + planner.animationKey
       filePath = f"{'/'.join(dirs[:-1])}/{planner.animationKey}"
       os.mkdir(filePath)
 

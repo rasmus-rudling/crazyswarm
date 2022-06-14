@@ -36,5 +36,18 @@ def updateSafetyFunction():
         gp.startProcess()
     
 
+def plotSafetyFunction():
+    gp = GaussianProcess(
+        pID=0, 
+        safetyFunction="sf2",
+        csvFileName="sf2Input.csv",
+        savedTrajectoriesDir=f"{PATH_TO_ROOT}/preStudy/savedTrajectories"
+    )
+
+    gp.plotCurrentPredictionAs3d()
+
 if __name__ == "__main__":
-    updateSafetyFunction()
+    if len(sys.argv) > 1 and sys.argv[1] == "plot":
+        plotSafetyFunction()
+    else:
+        updateSafetyFunction()
