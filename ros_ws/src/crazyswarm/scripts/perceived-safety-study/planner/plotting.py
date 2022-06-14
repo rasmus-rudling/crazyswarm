@@ -176,22 +176,24 @@ def plotPathToCurrentDroneStateLive(droneState: "DroneState", planner: "Planner"
   # uniform_data = np.random.rand(10, 12)
   # ax = sns.heatmap(uniform_data)
 
-  if planner.cbf.key == "heuristic":
-    dronePatch = Circle((0, 0), 0.45, color="red", zorder=50)
-    ax.add_patch(dronePatch)
-    ax.annotate("0m/s", (0, 0.35), color='w', weight='bold', ha='center', va='center', fontsize=9, zorder=51)
+  if planner.sf.name == "heuristic":
+    h = planner.HUMAN
 
-    dronePatch = Circle((0, 0), 1.2, color="orange", zorder=40)
+    dronePatch = Circle((h.x, h.y), 0.45, color="red", zorder=50)
     ax.add_patch(dronePatch)
-    ax.annotate("1m/s", (0, 1.1), color='w', weight='bold', ha='center', va='center', fontsize=9, zorder=41)
+    ax.annotate("0m/s", (h.x, h.y + 0.35), color='w', weight='bold', ha='center', va='center', fontsize=9, zorder=51)
 
-    dronePatch = Circle((0, 0), 3.6, color="pink", zorder=30)
+    dronePatch = Circle(((h.x, h.y)), 1.2, color="orange", zorder=40)
     ax.add_patch(dronePatch)
-    ax.annotate("2m/s", (0, 1.5), color='w', weight='bold', ha='center', va='center', fontsize=9, zorder=31)
+    ax.annotate("0.75m/s", (h.x, h.y + 1.1), color='w', weight='bold', ha='center', va='center', fontsize=9, zorder=41)
 
-    dronePatch = Circle((0, 0), 7.6, color="purple", zorder=20)
+    dronePatch = Circle((h.x, h.y), 3.6, color="pink", zorder=30)
     ax.add_patch(dronePatch)
-    ax.annotate("3m/s", (0, 0), color='w', weight='bold', ha='center', va='center', fontsize=9, zorder=21)
+    ax.annotate("1.5m/s", (h.x, h.y + 1.5), color='w', weight='bold', ha='center', va='center', fontsize=9, zorder=31)
+
+    dronePatch = Circle((h.x, h.y), 7.6, color="purple", zorder=20)
+    ax.add_patch(dronePatch)
+    ax.annotate("1.5m/s", (h.x, h.y), color='w', weight='bold', ha='center', va='center', fontsize=9, zorder=21)
 
   if planner.saveAnimation:
     animationName = planner.currentAnimationFrame if fileName is None else fileName

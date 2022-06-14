@@ -1,4 +1,5 @@
 from math import sqrt
+from time import sleep
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -19,10 +20,11 @@ class CBF:
   EPSILON_MIN = 0.1
   EPSILON_MAX = 0.75
 
-  def __init__(self, decceleration_max, epsilon, key="cbf"):
+  def __init__(self, decceleration_max, epsilon):
+    self.name = "cbf"
+    
     self.decceleration_max = decceleration_max
     self.epsilon = epsilon
-    self.key = key
 
 
   def maxVelocityForCurrentDistance(self, distance):
@@ -41,42 +43,58 @@ class CBF:
 
     return distance >= (minDistance + droneRadius + humanRadius)**2  and velocity <= DRONE_MAX_VELOCITY
 
-def heuristicFunction(distance: float) -> float:
-  """The heuristic controll barrier function
 
-  Args:
-      distance (float): distance from drone edge to human center 
 
-  Returns:
-      velocity (float): maximum allowed velocity in m/s
-  """
-  if distance < 0.45:
-      velocity = 0
-  elif 0.45 <= distance and distance < 1.2:
-      velocity = 1.0
-  elif 1.2 <= distance and distance < 3.6:
-      velocity = 2.0
-  elif 3.6 <= distance and distance < 7.6:
-      velocity = 3.0
-  else:
-      velocity = 3.5
+class HeuristicSafetyFunction:
+  def __init__(self):
+    self.name = "heuristic"
 
-  return velocity
+    self.zoneLimits =           np.array([0.45, 1.2, 3.6, 7.6])
+    self.velocitiesWithinZone = np.array([0,    0.75, 1.5, 1.5])
+    self.zones = {}
+
+    for i, zoneLimit in enumerate(self.zoneLimits):
+      self.zones[zoneLimit] = self.velocitiesWithinZone[i]
+
+  def maxVelocityForCurrentDistance(self, distance: float) -> float:
+    """The heuristic controll barrier function
+
+    Args:
+        distance (float): distance from drone edge to human center 
+
+    Returns:
+        velocity (float): maximum allowed velocity in m/s
+    """
+
+    distance += 0.25
+
+    diffs = self.zoneLimits - distance
+    
+    for i, diff in enumerate(diffs):
+      if diff > 0:
+        return self.velocitiesWithinZone[i]
+
+    return self.velocitiesWithinZone[-1]
+
   
+  def velocityIsApprovedForCurrentDistance(self, distance, velocity, droneRadius, humanRadius):
+    # reversedLimits = sorted(self.zoneLimits, reverse=True)
+    # reversedVelocities = np.array(sorted(self.velocitiesWithinZone, reverse=True))
+    
+    diffs = self.velocitiesWithinZone - velocity
+    minDistance = 99999999
+    
+    for i, diff in enumerate(diffs):
+      if diff > 0:
+        minDistance = self.zoneLimits[i-1]
+        break
+    
+    # appr = distance >= (minDistance + droneRadius)**2 and velocity <= DRONE_MAX_VELOCITY
+    # print(f"{round(velocity, 2)} m/s -> min. D = {minDistance} m | Approved if {round(distance, 2)} ≥ {round((minDistance + droneRadius)**2, 2)} -> {'Approved' if appr else 'Denied'}")
 
-def isApprovedByCbf(distance: float, decelerationMax, epsilon, velocityMax, droneVelocity) -> bool:
-  if np.isclose(distance, 0) or epsilon > distance:
-    return False
-
-  return np.min([np.sqrt(2 * np.abs(decelerationMax) * (distance - epsilon)), velocityMax]) >= droneVelocity
-
-
-def cbfForPlotting(distance, decelerationMax, epsilon, velocityMax):
-  if np.isclose(distance, 0) or epsilon > distance:
-    return 0
-
-  else:
-    return np.min([np.sqrt(2 * np.abs(decelerationMax) * (distance - epsilon)), velocityMax])
+    # sleep(0.25)
+    
+    return distance >= (minDistance + droneRadius)**2 and velocity <= DRONE_MAX_VELOCITY
 
 
 def plotVelocities():
@@ -112,4 +130,7 @@ def plotVelocities():
   # plt.show()
   
 if __name__ == "__main__":
-  plotVelocities()
+  # plotVelocities()
+  h = HeuristicSafetyFunction()
+
+  maxV = h.maxVelocityForCurrentDistance(2)

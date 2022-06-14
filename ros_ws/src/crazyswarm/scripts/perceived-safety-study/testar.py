@@ -1,5 +1,9 @@
-a = [1, 0.6, 0, -0.6, -1.0]
+from random import shuffle
 
-midIdx = len(a) // 2
 
-print(a[midIdx:])
+a = [1, 2, 3, 4, 5, 6, 7]
+
+shuffle(a)
+
+print(a)
+

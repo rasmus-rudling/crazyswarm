@@ -1,4 +1,5 @@
 import csv
+from random import shuffle
 import numpy as np
 
 from helpers import userInput
@@ -15,7 +16,7 @@ PREVIOUS_DRONE_EXPERIENCE = {
 class Participant:
     CSV_PATH = f"{PATH_TO_ROOT}/utils/participants.csv"
 
-    def __init__(self, id, firstName, lastName, gender, height, previousDroneExperience, email):
+    def __init__(self, id, firstName, lastName, gender, height, previousDroneExperience, email, sfOrder):
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
@@ -23,6 +24,7 @@ class Participant:
         self.height = height
         self.previousDroneExperience = previousDroneExperience
         self.email = email
+        self.sfOrder = sfOrder
 
     def save(self):
         allParticipants = Participant.getAllParticipants()
@@ -37,7 +39,7 @@ class Participant:
             with open(Participant.CSV_PATH, 'w', encoding='UTF8') as f:
                 writer = csv.writer(f)
 
-                header = ["id", "firstName", "lastName", "gender", "height", "previousDroneExperience", "email"]
+                header = ["id", "firstName", "lastName", "gender", "height", "previousDroneExperience", "email", "sfOrder"]
                 writer.writerow(header)
 
                 for participant in allParticipants:
@@ -48,7 +50,8 @@ class Participant:
                         participant.gender, 
                         participant.height, 
                         str(participant.previousDroneExperience), 
-                        participant.email
+                        participant.email,
+                        participant.sfOrder
                     ])
 
         return addUser
@@ -78,7 +81,8 @@ class Participant:
                         gender=participantData[3],
                         height=int(participantData[4]),
                         previousDroneExperience=participantData[5],
-                        email=participantData[6]
+                        email=participantData[6],
+                        sfOrder=participantData[7]
                     )
 
                     participants.append(p)
@@ -105,6 +109,39 @@ class Participant:
         
         return None
     
+    @staticmethod
+    def getParticipant():
+        userInput = input("User ID or email: ")
+
+        participantID = None
+
+        try:
+            participantID = int(userInput)
+        except:
+            participantEmail = userInput
+
+        if participantID is not None:
+            p = Participant.getParticipantById(participantID)
+        else:
+            p = Participant.getUserByEmail(participantEmail)
+
+        return p
+
+    @staticmethod
+    def getRandomSFOrder():
+        possibleSafetyFunctions = ["1", "2", "3"]
+
+        safetyFunctions = []
+
+        for sfIdx in range(3):
+            for _ in range(3):
+                sf = possibleSafetyFunctions[sfIdx]
+                safetyFunctions.append(sf)
+
+        shuffle(safetyFunctions)
+
+        return "-".join(safetyFunctions)
+
     @classmethod
     def fromTerminalInput(cls: "Participant"):
         id = Participant.getIdForNewUser()
@@ -130,7 +167,8 @@ class Participant:
             gender=gender,
             height=height,
             previousDroneExperience=previousDroneExperience,
-            email=email
+            email=email,
+            sfOrder=Participant.getRandomSFOrder()
        )
 
         return newParticipant

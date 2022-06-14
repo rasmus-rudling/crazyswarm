@@ -1,4 +1,3 @@
-from audioop import reverse
 from datetime import datetime
 import math
 from time import time
@@ -8,7 +7,6 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 
-from planner.cbFunctions import CBF, heuristicFunction, isApprovedByCbf
 from planner.drone import DroneGoalState, DroneState
 from planner.flyZone import FlyZone
 from planner.helperFunctions import reverse_insort
@@ -24,20 +22,13 @@ from threading import Thread
 import glob
 from PIL import Image
 
-from trajectory import Trajectory
-
 PRINT_AT = 10000
 
 class Planner:
-  CONTROLL_BARRIER_FUNCTIONS = {
-    "heuristic": heuristicFunction,
-    "cbf": isApprovedByCbf
-  }
-
   HUMAN = Obstacle(0.75, -1.0, 0.25)
-  HUMAN = Obstacle(0.75, 2.0, 0.25)
+  # HUMAN = Obstacle(0.75, 2.0, 0.25)
 
-  def __init__(self, dt: float, obstacles: List["Obstacle"], flyZone: "FlyZone", verboseLevel: int, cbf: "CBF", possibleAccelerations) -> None:
+  def __init__(self, dt: float, obstacles: List["Obstacle"], flyZone: "FlyZone", verboseLevel: int, sf, possibleAccelerations) -> None:
     self.dt = dt
     # Movement.POSSIBLE_ACCELERATIONS = [acc * dt for acc in possibleAccelerations]
     self.originalPossibleAccelerations = possibleAccelerations
@@ -45,7 +36,7 @@ class Planner:
     self.obstacles = obstacles
     self.flyZone = flyZone
     self.verboseLevel = verboseLevel
-    self.cbf = cbf
+    self.sf = sf
 
     self.iterations = 0
     self.currentGoalState = None
@@ -291,8 +282,12 @@ class Planner:
 
   def setKey(self, finalDroneState: "DroneState", isFinalTrajectory:bool=False) -> bool:
     dateString = str(datetime.now()).split(".")[0]
-    self.animationKey = f"{dateString} | eps={round(self.cbf.epsilon, 2)} a_max={round(self.cbf.decceleration_max, 2)} | D={finalDroneState.depth} "
-    
+
+    if self.sf.name == "cbf":
+      self.animationKey = f"{dateString} | eps={round(self.sf.epsilon, 2)} a_max={round(self.sf.decceleration_max, 2)} | D={finalDroneState.depth} "
+    else:
+      self.animationKey = f"{dateString} | Heuristic | D={finalDroneState.depth} "
+
     if isFinalTrajectory:
       self.animationKey += " | Final trajectory"
 

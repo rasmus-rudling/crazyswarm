@@ -10,21 +10,12 @@ from Participant import Participant
 from GaussianProcess import GaussianProcess
 from globalVariables import PATH_TO_ROOT
 
+
+
+
 def stage1():
     """ Create SF3.PID """
-    userInput = input("User ID or email: ")
-
-    participantID = None
-
-    try:
-        participantID = int(userInput)
-    except:
-        participantEmail = userInput
-
-    if participantID is not None:
-        p = Participant.getParticipantById(participantID)
-    else:
-        p = Participant.getUserByEmail(participantEmail)
+    p = Participant.getParticipant()
 
     try:
         os.mkdir(f"{PATH_TO_ROOT}/mainStudy/participants/{p.id}")
@@ -49,7 +40,14 @@ def stage1():
 
 def stage2():
     """ Test safety functions """
-    pass
+    p = Participant.getParticipant()
+
+    safetyFunctions = {
+        "1": None,
+        "2": None,
+        "3": None
+    }
+
 
 
 def plotSafetyFunction():

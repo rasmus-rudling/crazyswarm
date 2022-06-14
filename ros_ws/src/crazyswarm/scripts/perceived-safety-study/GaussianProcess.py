@@ -213,7 +213,7 @@ class GaussianProcess:
       rating = int(rating)
 
       if not approvedRating(rating):
-        print("ERROR: Rating must be in the interval (0, 10]")
+        print(f"ERROR: Rating must be in the interval [-{MAX_INPUT_VAL}, {MAX_INPUT_VAL}]")
 
     return rating
 
@@ -271,7 +271,7 @@ class GaussianProcess:
       dirs = self.savedTrajectoriesDir.split("/")
 
       if "mainStudy" in self.savedTrajectoriesDir:
-        planner.animationKey = f"{dirs[-2]}/{dirs[-1]}/Round #{len(self.perceivedSafety)}.{self.currentParticipant.id} - " + planner.animationKey
+        planner.animationKey = f"{dirs[-2]}/{dirs[-1]}/GP | Round #{len(self.perceivedSafety)}.{self.currentParticipant.id} - " + planner.animationKey
         filePath = f"{'/'.join(dirs[:-2])}/{planner.animationKey}"
       else:
         planner.animationKey = f"{dirs[-1]}/Round #{len(self.perceivedSafety)}.{self.currentParticipant.id} - " + planner.animationKey

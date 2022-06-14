@@ -1,8 +1,6 @@
-import math
 from matplotlib import pyplot as plt
 from planner.cbFunctions import CBF
 from planner.helperFunctions import cmToInches, getDirectionVectorFromAngleAndLength
-from planner.obstacle import Obstacle
 from position import Position
 import numpy as np
 import pandas as pd

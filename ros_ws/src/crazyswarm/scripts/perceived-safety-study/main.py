@@ -1,5 +1,5 @@
 import os
-from planner.cbFunctions import CBF
+from planner.cbFunctions import CBF, HeuristicSafetyFunction
 from planner.drone import DroneGoalState, DroneState
 from planner.flyZone import MOCAP_FLY_ZONE
 from planner.motionPlanner import Planner, recordFinalTrajectory
@@ -12,21 +12,22 @@ from time import time
 from utils.globalVariables import DRONE_START_X, DRONE_START_Y, GOAL_OFFSET_X, GOAL_OFFSET_Y
 
 def main():
-  cbf = CBF(CBF.DECELERATION_MAX_MIN, CBF.EPSILON_MAX) # Slow breaking + far away from goal => conservative
-  cbf = CBF(CBF.DECELERATION_MAX_MAX, CBF.EPSILON_MIN) # Hard breaking + close to the goal => liberal
-  # cbf = CBF(CBF.DECELERATION_MAX_MAX, CBF.EPSILON_MAX) 
+  sf = CBF(CBF.DECELERATION_MAX_MIN, CBF.EPSILON_MAX) # Slow breaking + far away from goal => conservative
+  sf = CBF(CBF.DECELERATION_MAX_MAX, CBF.EPSILON_MIN) # Hard breaking + close to the goal => liberal
+  sf = HeuristicSafetyFunction()
+  # sf = CBF(CBF.DECELERATION_MAX_MAX, CBF.EPSILON_MAX) 
 
-  # cbf = CBF(1.0, 0.1) # Fastest
-  # # cbf = CBF(0.1, 0.7) # Slowest
+  # sf = CBF(1.0, 0.1) # Fastest
+  # sf = CBF(0.1, 0.7) # Slowest
 
-  # # cbf = CBF(0.1, 0.7)
+  # sf = CBF(0.1, 0.7)
 
   planner = Planner(
     dt=0.1,
     obstacles=[],
     flyZone=MOCAP_FLY_ZONE,
     verboseLevel=3,
-    cbf=cbf,
+    sf=sf,
     possibleAccelerations=[1.0, 0.6, 0.3, 0.0, -0.3, -0.6, -1.0]
   )
 
@@ -61,7 +62,7 @@ def main():
     os.mkdir(filePath)
 
     trajectory = Trajectory(finalDroneState=currentDroneState)
-    trajectory.plot(f"{filePath}/trajectoryPlot.png", cbf, planner=planner)
+    trajectory.plot(f"{filePath}/trajectoryPlot.png", sf, planner=planner)
     trajectory.saveToCsv(f"{filePath}/trajectoryData.csv")
 
     os.mkdir(f"{filePath}/animationFrames")

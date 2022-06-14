@@ -7,8 +7,10 @@ from planner.helperFunctions import getDirectionVectorFromAngleAndLength
 from position import Position
 
 EPSILON_CLOSE_TO_GOAL = 0.2
+MIN_VELOCITY = 0.1
 
 class Movement:
+  IS_MOVING = False
 
   POSSIBLE_ANGLES = [
     np.deg2rad(-5.0), 
@@ -35,32 +37,27 @@ class Movement:
     self.newDistanceToGoal = self.getNewDistanceToGoal()
     self.isValid = self.getMovementIsValid()
 
-    # if self.isValid:
     self.willHaveReachedGoal = self.willHaveReachedGoal()
-    
+
+    if self.isValid and self.velocity >= MIN_VELOCITY:
+      Movement.IS_MOVING = True
 
     self.key = f"{self.angle} | {self.acceleration} | ({self.associatedDroneState.x}, {self.associatedDroneState.y}) | {self.velocity} | {self.yaw} | {self.newPos} | {self.newDistanceToGoal} | {self.newDistanceToGoal}"
 
   def willHaveReachedGoal(self, epsilon:float=EPSILON_CLOSE_TO_GOAL) -> bool:
-    isEpsilonCloseToGoal = self.newDistanceToGoal <= epsilon**2
-    isEpsilonCloseToZeroVelocity = 0 <= self.velocity <= epsilon
-
-    if not isEpsilonCloseToGoal or not isEpsilonCloseToZeroVelocity:
+    if not (self.newDistanceToGoal <= epsilon**2):
       return False
 
-    if self.planner.cbf.key == "cbf":
-      approvedByCbf = self.planner.cbf.velocityIsApprovedForCurrentDistance(
-        self.newDistanceToHuman, 
-        self.velocity,
-        droneRadius=self.associatedDroneState.DRONE_INFO.radius,
-        humanRadius=self.planner.HUMAN.radius
-      )
-    else:
-      maxVelocityForCurrentDistanceToHuman = self.planner.cbf(self.newDistanceToHuman)
-    
-    willHaveReachedGoal = approvedByCbf and isEpsilonCloseToGoal and isEpsilonCloseToZeroVelocity
+    if not (0 <= self.velocity <= epsilon):
+      return False
 
-    return willHaveReachedGoal 
+    return self.planner.sf.velocityIsApprovedForCurrentDistance(
+      self.newDistanceToHuman, 
+      self.velocity,
+      droneRadius=self.associatedDroneState.DRONE_INFO.radius,
+      humanRadius=self.planner.HUMAN.radius
+    )
+    
 
   def getNewDistanceToGoal(self) -> float:
     return self.newPos.euclidianDistanceToCurrentPosition(self.planner.currentGoalState)
@@ -71,21 +68,15 @@ class Movement:
 
 
   def getMovementIsValid(self) -> bool:
-    if self.planner.cbf.key == "cbf":
-      approvedByCbf = self.planner.cbf.velocityIsApprovedForCurrentDistance(
-        self.newDistanceToHuman, 
-        self.velocity,
-        droneRadius=self.associatedDroneState.DRONE_INFO.radius,
-        humanRadius=self.planner.HUMAN.radius
-      )
-    else:
-      maxVelocityForCurrentDistanceToHuman = self.planner.cbf(self.newDistanceToHuman)
+    if self.velocity <= 0.1 and Movement.IS_MOVING:
+      return False
 
-    droneIsNotStandingStill = self.velocity >= 0.1
-
-    movementIsValid = approvedByCbf and droneIsNotStandingStill
-    return movementIsValid
-
+    return self.planner.sf.velocityIsApprovedForCurrentDistance(
+      self.newDistanceToHuman, 
+      self.velocity,
+      droneRadius=self.associatedDroneState.DRONE_INFO.radius,
+      humanRadius=self.planner.HUMAN.radius
+    )
 
   def getNewPos(self) -> "Position":
     newPos = np.array([self.associatedDroneState.x, self.associatedDroneState.y]) + getDirectionVectorFromAngleAndLength(self.yaw, self.distance)
