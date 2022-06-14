@@ -1,14 +1,12 @@
 from itertools import product
 import sys
-sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils')
 
-from Participant import Participant
-from globalVariables import DRONE_START_X, DRONE_START_Y, GOAL_OFFSET_X, GOAL_OFFSET_Y, PATH_TO_ROOT, POSSIBLE_ACCELERATIONS
-from helpers import userInput
+sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils')
+from utils.globalVariables import DRONE_START_X, DRONE_START_Y, GOAL_OFFSET_X, GOAL_OFFSET_Y, POSSIBLE_ACCELERATIONS
 
 import numpy as np
 from matplotlib import pyplot as plt
-from SimpleTrajectory import SimpleTrajectory
+from SimpleTrajectory import Z_HEIGHT, SimpleTrajectory
 
 import os
 import platform
@@ -31,23 +29,16 @@ from mpl_toolkits.mplot3d import Axes3D
 import csv
 
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 
 MAX_INPUT_VAL = 3
 
 class GaussianProcess:
   NUM_VALUES = 50
 
-  def __init__(self, pID, safetyFunction, csvFileName, savedTrajectoriesDir):
-    self.currentParticipant = Participant.getParticipantById(pID)
-    self.sfName = safetyFunction
-    self.csvFileName = csvFileName
-    self.savedTrajectoriesDir = savedTrajectoriesDir
-    
-    self.initGP()
-    self.initDataFromCsv()
+  SF_CSV_PATH = None
 
-  def initGP(self):
+  def __init__(self, currentParticipantHeight=None, safetyFunction=None):
     noise_std = 0.75
     kernel = 1 * RBF()
 
@@ -62,93 +53,98 @@ class GaussianProcess:
     self.nextEpsilonToCheck = round(np.random.choice(self.epsilonRange), 2)
     self.nextdecelerationMaxToCheck = round(np.random.choice(self.decelerationMaxRange), 2)
 
-  def initDataFromCsv(self):
     self.X = []
-    self.perceivedSafety = []
-    self.bestParameterPair = []
+    self.safetyScores = []
+    self.bestParameterPairs = []
     self.bestPerceivedSafety = []
-    self.participantID = []
+    self.participantHeights = []
 
-    try:
-      with open(self.csvFileName, newline='') as csvfile:
-        csvData = list(csv.reader(csvfile, delimiter=','))[1:]
+    # Check if to continue from previous data
+    if safetyFunction is None:
+      safetyFunction = input("Safety function name: ")
 
-        eps = [float(row[1]) for row in csvData]
-        a_max = [float(row[2]) for row in csvData]
+    self.sfName = safetyFunction
 
-        numDataPoints = len(eps)
+    if len(sys.argv) > 1 and sys.argv[1] == "plot":
+      self.currentParticipantHeight = -1
+    elif currentParticipantHeight is None:
+      self.currentParticipantHeight = int(input("Participant height (in cm): "))
+    else:
+      self.currentParticipantHeight = currentParticipantHeight
 
-        self.X = [[eps[i], a_max[i]] for i in range(numDataPoints)]
-        self.perceivedSafety = [int(row[3]) for row in csvData]
+    if safetyFunction is None:
+      existingSafetyFunctions = [sf.split(".")[0]  for sf in os.listdir("gpData")]
 
-        curr_best_eps = [float(row[4]) for row in csvData]
-        curr_best_a_max = [float(row[5]) for row in csvData]
-        self.bestParameterPair = [[curr_best_eps[i], curr_best_a_max[i]] for i in range(numDataPoints)]
-        self.bestPerceivedSafety = [float(row[6]) for row in csvData]
-        self.participantID = [int(row[7]) for row in csvData]
+      if safetyFunction in existingSafetyFunctions:
+        # TODO: Lös det här för när man kommer ifrån preStudy
+        GaussianProcess.SF_CSV_PATH = f"gpData/{safetyFunction}.csv"
 
+        self.addDataFromCsv()
         self.updatePredictions()
         self.updateNextValuesToAskFor()
 
-    except:
-      print("No previous data found")
+  def addDataFromCsv(self):
+      gpData = np.loadtxt(GaussianProcess.SF_CSV_PATH, delimiter=",", skiprows=1)
 
-    self.updateCsv()
+      if gpData.ndim == 1:
+        gpData = np.array([gpData])
+      
+      eps = [row[1] for row in gpData]
+      a_max = [row[2] for row in gpData]
 
-  @classmethod
-  def throughTerminalInput(cls):
-    pID = userInput("Participant id: ", int)
-    safetyFunction = userInput("Safety function name: ")
+      numDataPoints = len(eps)
 
-    return cls(
-      pID=pID, 
-      safetyFunction=safetyFunction,
-      csvFileName=f"gpData/{safetyFunction}.csv",
-      savedTrajectoriesDir=f"{PATH_TO_ROOT}/savedTrajectories/{safetyFunction}"
-    )
+      self.X = [[eps[i], a_max[i]] for i in range(numDataPoints)]
+      self.safetyScores = [row[3] for row in gpData]
 
-  def addData(self, perceivedSafety):
+      curr_best_eps = [row[4] for row in gpData]
+      curr_best_a_max = [row[5] for row in gpData]
+      self.bestParameterPairs = [[curr_best_eps[i], curr_best_a_max[i]] for i in range(numDataPoints)]
+      self.bestPerceivedSafety = [row[6] for row in gpData]
+      self.participantHeights = [row[7] for row in gpData]
+
+  def addData(self, safetyScore):
     self.X.append([self.nextEpsilonToCheck, self.nextdecelerationMaxToCheck])
-    self.perceivedSafety.append(perceivedSafety)
+    self.safetyScores.append(safetyScore)
 
     self.updatePredictions()
 
     bestParameterPair = np.argmin(np.abs(self.predictions))
     eIdx, aMaxIdx = np.unravel_index(bestParameterPair, (self.NUM_VALUES, self.NUM_VALUES), order='C')
 
-    self.bestParameterPair.append([self.epsilonRange[eIdx], self.decelerationMaxRange[aMaxIdx]])
+    self.bestParameterPairs.append([self.epsilonRange[eIdx], self.decelerationMaxRange[aMaxIdx]])
     self.bestPerceivedSafety.append(self.predictions[eIdx][aMaxIdx])
 
-    self.participantID.append(self.currentParticipant.id)
+    self.participantHeights.append(self.currentParticipantHeight)
 
     self.updateCsv()
 
   def updateCsv(self):
-    with open(self.csvFileName, 'w', encoding='UTF8') as f:
+    with open(f"gpData/{self.sfName}.csv", 'w', encoding='UTF8') as f:
       writer = csv.writer(f)
-      header = ["id", "eps", "aMax", "perceivedSafety", "bestEps", "bestAMax", "bestPerceivedSafety", "participantID"]
+      header = ["idx", "eps", "a_max", "ps", "curr_best_eps", "curr_best_a_max", "curr_best_perceived_safety", "participant_height"]
 
       writer.writerow(header)
 
-      numDataPoints = len(self.perceivedSafety)
+      numDataPoints = len(self.safetyScores)
 
       for i in range(numDataPoints):
         writer.writerow([ 
           i,
           self.X[i][0], 
           self.X[i][1], 
-          self.perceivedSafety[i],
-          self.bestParameterPair[i][0],
-          self.bestParameterPair[i][1],
+          self.safetyScores[i],
+          self.bestParameterPairs[i][0],
+          self.bestParameterPairs[i][1],
           self.bestPerceivedSafety[i],
-          self.participantID[i]
+          self.participantHeights[i]
         ])
 
   def updatePredictions(self):
-    formatedperceivedSafety = np.array([np.array([currentperceivedSafety]) for currentperceivedSafety in self.perceivedSafety])
+    formatedSafetyScore = np.array([np.array([currentSafetyScore]) for currentSafetyScore in self.safetyScores])
     formattedX = np.array(self.X)
 
-    self.gp.fit(formattedX, formatedperceivedSafety)
+    self.gp.fit(formattedX, formatedSafetyScore)
 
     for i, eCurr in enumerate(self.epsilonRange):
       for j, aMaxCurr in enumerate(self.decelerationMaxRange):
@@ -190,7 +186,7 @@ class GaussianProcess:
       rstride=1, cstride=1, cmap='viridis', edgecolor='none'
     )
 
-    # bestEpsIdx, bestDecMaxIdx = self.bestParameterPair[-1]
+    # bestEpsIdx, bestDecMaxIdx = self.bestParameterPairs[-1]
 
     # N=50
     # stride=1
@@ -208,7 +204,7 @@ class GaussianProcess:
       plt.pause(9999999999999)
     plt.show()
 
-  def getperceivedSafety(self):
+  def getSafetyScore(self):
     def approvedRating(rating):
       return -MAX_INPUT_VAL <= rating and rating <= MAX_INPUT_VAL
 
@@ -229,16 +225,16 @@ class GaussianProcess:
     return rating
 
   def startProcess(self):
-    print(f"\n- Round #{len(self.perceivedSafety)} -")
+    print(f"\n- Round #{len(self.safetyScores)} -")
     print(f"Epsilon = {self.nextEpsilonToCheck}")
     print(f"Max deceleration = {self.nextdecelerationMaxToCheck}")
     trajectoryKeys = self.findTrajectories(saveAnimation=False)
     if not USING_MAC:
       self.executeTrajectories(trajectoryKeys)
 
-    perceivedSafety = self.getperceivedSafety()
+    safetyScore = self.getSafetyScore()
 
-    self.addData(perceivedSafety)
+    self.addData(safetyScore)
     self.updateNextValuesToAskFor()
     self.plotCurrentPredictionAs3d()
 
@@ -275,14 +271,12 @@ class GaussianProcess:
       print("Found goal :)")
       planner.setKey(currentDroneState, True)
       try:
-        os.mkdir(f"{self.savedTrajectoriesDir}")
+        os.mkdir(f"savedTrajectories/{self.sfName}")
       except:
         pass
       
-      dirs = self.savedTrajectoriesDir.split("/")
-
-      planner.animationKey = f"{dirs[-1]}/Round #{len(self.perceivedSafety)} - " + planner.animationKey
-      filePath = f"{'/'.join(dirs[:-1])}/{planner.animationKey}"
+      planner.animationKey = f"{self.sfName}/Round #{len(self.safetyScores)} - " + planner.animationKey
+      filePath = f"savedTrajectories/{planner.animationKey}"
       os.mkdir(filePath)
 
       trajectory = Trajectory(finalDroneState=currentDroneState)
@@ -313,7 +307,7 @@ class GaussianProcess:
 
     for i, trajectoryKey in enumerate(trajectoryKeys):
       currentPathToTrajectoryFolder = f"savedTrajectories/{trajectoryKey}"
-      z_height = (self.currentParticipant.height - 50) / 100
+      z_height = (self.currentParticipantHeight - 50) / 100
       currentPlannedTrajectory = SimpleTrajectory(csv=f"{currentPathToTrajectoryFolder}/trajectoryData.csv", z_height=z_height)
       currentStartPose = Pose(currentPlannedTrajectory.x[0], currentPlannedTrajectory.y[0], currentPlannedTrajectory.z[0], currentPlannedTrajectory.yaw[0])
       currentTrajectoryToStartPose = droneController.getTrajectoryToPose(goalPose=currentStartPose, velocity=0.5)
@@ -346,13 +340,14 @@ class GaussianProcess:
     
    
 
+
 def main():
-  gp = GaussianProcess.throughTerminalInput()
+  pt = GaussianProcess()
   
   if len(sys.argv) <= 1:
-    gp.startProcess()
+    pt.startProcess()
   elif sys.argv[1] == "plot":
-    gp.plotCurrentPredictionAs3d()
+    pt.plotCurrentPredictionAs3d()
    
 
 if __name__ == "__main__":

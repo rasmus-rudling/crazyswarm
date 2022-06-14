@@ -6,6 +6,7 @@ sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/
 from Participant import Participant
 
 from GaussianProcess import GaussianProcess
+from globalVariables import PATH_TO_ROOT
 
 def updateSafetyFunction():
     userInput = input("User ID or email: ")
@@ -24,9 +25,12 @@ def updateSafetyFunction():
     else:
         p = Participant.getUserByEmail(participantEmail)
 
-    GaussianProcess.SF_CSV_PATH = "" # TODO
-    gp = GaussianProcess(currentParticipantHeight=p.height, safetyFunction="sf2")
-
+    gp = GaussianProcess(
+        pID=p.id, 
+        safetyFunction="sf2",
+        csvFileName="sf2Input.csv",
+        savedTrajectoriesDir=f"{PATH_TO_ROOT}/preStudy/savedTrajectories"
+    )
     
     for _ in range(5):
         gp.startProcess()

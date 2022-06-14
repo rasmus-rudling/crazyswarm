@@ -26,7 +26,7 @@ from PIL import Image
 
 from trajectory import Trajectory
 
-PRINT_AT = 1000
+PRINT_AT = 10000
 
 class Planner:
   CONTROLL_BARRIER_FUNCTIONS = {
@@ -34,7 +34,8 @@ class Planner:
     "cbf": isApprovedByCbf
   }
 
-  HUMAN = Obstacle(0.75, -1.25, 0.25) # If you change here, change in plotting aswell
+  HUMAN = Obstacle(0.75, -1.0, 0.25)
+  # HUMAN = Obstacle(0.75, 2.0, 0.25)
 
   def __init__(self, dt: float, obstacles: List["Obstacle"], flyZone: "FlyZone", verboseLevel: int, cbf: "CBF", possibleAccelerations) -> None:
     self.dt = dt

@@ -9,9 +9,11 @@ import cProfile, pstats, io
 from pstats import SortKey
 from time import time
 
+from utils.globalVariables import DRONE_START_X, DRONE_START_Y, GOAL_OFFSET_X, GOAL_OFFSET_Y
+
 def main():
   cbf = CBF(CBF.DECELERATION_MAX_MIN, CBF.EPSILON_MAX) # Slow breaking + far away from goal => conservative
-  # cbf = CBF(CBF.DECELERATION_MAX_MAX, CBF.EPSILON_MIN) # Hard breaking + close to the goal => liberal
+  cbf = CBF(CBF.DECELERATION_MAX_MAX, CBF.EPSILON_MIN) # Hard breaking + close to the goal => liberal
   # cbf = CBF(CBF.DECELERATION_MAX_MAX, CBF.EPSILON_MAX) 
 
   # cbf = CBF(1.0, 0.1) # Fastest
@@ -28,13 +30,9 @@ def main():
     possibleAccelerations=[1.0, 0.6, 0.3, 0.0, -0.3, -0.6, -1.0]
   )
 
-  x1, y1 = -1.9, 1.0
-  # x1, y1 = 1.0, 1.0
+  x2, y2 = planner.HUMAN.x + planner.HUMAN.radius + GOAL_OFFSET_X, planner.HUMAN.y + GOAL_OFFSET_Y
 
-  x2, y2 = 1.0, -1.0
-  x2, y2 = planner.HUMAN.x + planner.HUMAN.radius + 0.75, planner.HUMAN.y - 0.25
-
-  currentDroneState = Position(x=x1, y=y1)
+  currentDroneState = Position(x=DRONE_START_X, y=DRONE_START_Y)
 
   goalState = DroneGoalState(x=x2, y=y2, radius=0.1)
 

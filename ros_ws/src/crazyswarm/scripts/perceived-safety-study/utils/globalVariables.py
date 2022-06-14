@@ -1,1 +1,10 @@
 DRONE_MAX_VELOCITY = 1.5
+DRONE_START_X = -1.9
+DRONE_START_Y = 1.0
+
+GOAL_OFFSET_X = 0.75
+GOAL_OFFSET_Y = -0.5
+
+POSSIBLE_ACCELERATIONS = [1.0, 0.6, 0.3, 0.0, -0.3, -0.6, -1.0]
+
+PATH_TO_ROOT = "/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study"

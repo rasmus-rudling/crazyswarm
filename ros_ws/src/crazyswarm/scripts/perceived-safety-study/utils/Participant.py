@@ -2,6 +2,7 @@ import csv
 import numpy as np
 
 from helpers import userInput
+from globalVariables import PATH_TO_ROOT
 
 
 PREVIOUS_DRONE_EXPERIENCE = {
@@ -12,7 +13,7 @@ PREVIOUS_DRONE_EXPERIENCE = {
 }
 
 class Participant:
-    CSV_PATH = "participants.csv"
+    CSV_PATH = f"{PATH_TO_ROOT}/utils/participants.csv"
 
     def __init__(self, id, firstName, lastName, gender, height, previousDroneExperience, email):
         self.id = id

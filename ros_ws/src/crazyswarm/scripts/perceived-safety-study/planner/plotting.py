@@ -1,6 +1,9 @@
 if __name__ == "__main__":
   from planner import Planner
 
+import sys
+sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils')
+
 import functools
 import time
 from typing import List
@@ -15,7 +18,8 @@ from planner.flyZone import FlyZone
 from matplotlib.patches import Circle, FancyArrowPatch, ConnectionPatch
 from colour import Color
 import numpy as np
-from position import Position; np.random.seed(0)
+from position import Position
+from utils.globalVariables import PATH_TO_ROOT; np.random.seed(0)
 import seaborn as sns; sns.set_theme()
 from planner.obstacle import Obstacle
 
@@ -133,9 +137,12 @@ def savePlot(fig: Figure, folderNameForAnimation, animationName, saveInRoot=Fals
 
   if saveInRoot:
     try:
-      fig.savefig(f"../savedTrajectories/comparisons/{folderNameForAnimation}/{animationName}.png", format='png', dpi=120)
+      fig.savefig(f"{PATH_TO_ROOT}/savedTrajectories/comparisons/{folderNameForAnimation}/{animationName}.png", format='png', dpi=120)
     except:
-      fig.savefig(f"savedTrajectories/{folderNameForAnimation}/{animationName}.png", format='png', dpi=120)
+      try:
+        fig.savefig(f"{PATH_TO_ROOT}/savedTrajectories/{folderNameForAnimation}/{animationName}.png", format='png', dpi=120)
+      except:
+        fig.savefig(f"{PATH_TO_ROOT}/preStudy/{folderNameForAnimation}/{animationName}.png", format='png', dpi=120)
   else:
     fig.savefig(f"savedTrajectories/{folderNameForAnimation}/animationFrames/{animationName}.png", format='png', dpi=120)
 
