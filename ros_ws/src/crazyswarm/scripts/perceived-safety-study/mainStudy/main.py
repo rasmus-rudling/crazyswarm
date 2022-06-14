@@ -1,16 +1,17 @@
 import sys
 import os
 
+
 sys.path.append(f'/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study')
 sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils')
+sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/planner')
 
+from cbFunctions import CBF, HeuristicSafetyFunction
 from globalVariables import NUM_TRAJECTORIES_TO_TUNE_CBF
 from Participant import Participant
 
 from GaussianProcess import GaussianProcess
 from globalVariables import PATH_TO_ROOT
-
-
 
 
 def stage1():
@@ -43,9 +44,15 @@ def stage2():
     p = Participant.getParticipant()
 
     safetyFunctions = {
-        "1": None,
-        "2": None,
-        "3": None
+        "1": HeuristicSafetyFunction(),
+        "2": CBF(), # TODO
+        "3": CBF() # TODO
+    }
+
+    trajectories = {
+        "1": None, # TODO
+        "2": None, # TODO
+        "3": None, # TODO
     }
 
 
