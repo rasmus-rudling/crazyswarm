@@ -5,61 +5,70 @@ import numpy as np
 
 import sys
 
-sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/planner')
-sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils')
+sys.path.append(
+    '/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/planner'
+)
+sys.path.append(
+    '/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
+)
 
 from globalVariables import DRONE_MAX_VELOCITY
-import seaborn as sns; sns.set_theme()
+import seaborn as sns
+
+sns.set_theme()
 from plotUtils import saveFig
+
 sns.set(font_scale=2)
 
+
 class CBF:
-  DECELERATION_MAX_MIN = 0.1
-  DECELERATION_MAX_MAX = 1.0
+    DECELERATION_MAX_MIN = 0.1
+    DECELERATION_MAX_MAX = 1.0
 
-  EPSILON_MIN = 0.1
-  EPSILON_MAX = 0.75
+    EPSILON_MIN = 0.1
+    EPSILON_MAX = 0.75
 
-  def __init__(self, decceleration_max, epsilon):
-    self.name = "cbf"
-    
-    self.decceleration_max = decceleration_max
-    self.epsilon = epsilon
+    def __init__(self, decceleration_max, epsilon):
+        self.name = "cbf"
 
-    print(f"a_max = {decceleration_max}")
-    print(f"epsilon = {epsilon}")
+        self.decceleration_max = decceleration_max
+        self.epsilon = epsilon
 
-  def maxVelocityForCurrentDistance(self, distance):
-    if np.isclose(distance, 0) or self.epsilon > distance:
-      return 0
+    def maxVelocityForCurrentDistance(self, distance):
+        if np.isclose(distance, 0) or self.epsilon > distance:
+            return 0
 
-    else:
-      return np.min([np.sqrt(2 * np.abs(self.decceleration_max) * (distance - self.epsilon)), DRONE_MAX_VELOCITY])
+        else:
+            return np.min([
+                np.sqrt(2 * np.abs(self.decceleration_max) *
+                        (distance - self.epsilon)), DRONE_MAX_VELOCITY
+            ])
 
+    def velocityIsApprovedForCurrentDistance(self, distance, velocity,
+                                             droneRadius, humanRadius):
+        numerator = velocity**2
+        denominator = 2 * np.abs(self.decceleration_max)
 
-  def velocityIsApprovedForCurrentDistance(self, distance, velocity, droneRadius, humanRadius):
-    numerator = velocity ** 2
-    denominator = 2 * np.abs(self.decceleration_max)
+        minDistance = (numerator / denominator) + self.epsilon
 
-    minDistance = (numerator/denominator) + self.epsilon
-
-    return distance >= (minDistance + droneRadius + humanRadius)**2  and velocity <= DRONE_MAX_VELOCITY
-
+        return distance >= (minDistance + droneRadius +
+                            humanRadius)**2 and velocity <= DRONE_MAX_VELOCITY
 
 
 class HeuristicSafetyFunction:
-  def __init__(self):
-    self.name = "heuristic"
 
-    self.zoneLimits =           np.array([0.45, 1.2, 3.6, 7.6])
-    self.velocitiesWithinZone = np.array([0,    0.75, 1.5, 1.5])
-    self.zones = {}
+    def __init__(self):
+        self.name = "heuristic"
 
-    for i, zoneLimit in enumerate(self.zoneLimits):
-      self.zones[zoneLimit] = self.velocitiesWithinZone[i]
+        self.zoneLimits = np.array([0.45, 1.2, 3.6, 7.6])
+        self.velocitiesWithinZone = np.array([0, 0.75, 1.5, 1.5])
+        self.zones = {}
 
-  def maxVelocityForCurrentDistance(self, distance: float) -> float:
-    """The heuristic controll barrier function
+        for i, zoneLimit in enumerate(self.zoneLimits):
+            self.zones[zoneLimit] = self.velocitiesWithinZone[i]
+
+    def maxVelocityForCurrentDistance(self, distance: float) -> float:
+        """The heuristic controll barrier function
 
     Args:
         distance (float): distance from drone edge to human center 
@@ -68,71 +77,80 @@ class HeuristicSafetyFunction:
         velocity (float): maximum allowed velocity in m/s
     """
 
-    distance += 0.25
+        distance += 0.25
 
-    diffs = self.zoneLimits - distance
-    
-    for i, diff in enumerate(diffs):
-      if diff > 0:
-        return self.velocitiesWithinZone[i]
+        diffs = self.zoneLimits - distance
 
-    return self.velocitiesWithinZone[-1]
+        for i, diff in enumerate(diffs):
+            if diff > 0:
+                return self.velocitiesWithinZone[i]
 
-  
-  def velocityIsApprovedForCurrentDistance(self, distance, velocity, droneRadius, humanRadius):
-    # reversedLimits = sorted(self.zoneLimits, reverse=True)
-    # reversedVelocities = np.array(sorted(self.velocitiesWithinZone, reverse=True))
-    
-    diffs = self.velocitiesWithinZone - velocity
-    minDistance = 99999999
-    
-    for i, diff in enumerate(diffs):
-      if diff > 0:
-        minDistance = self.zoneLimits[i-1]
-        break
-    
-    # appr = distance >= (minDistance + droneRadius)**2 and velocity <= DRONE_MAX_VELOCITY
-    # print(f"{round(velocity, 2)} m/s -> min. D = {minDistance} m | Approved if {round(distance, 2)} ≥ {round((minDistance + droneRadius)**2, 2)} -> {'Approved' if appr else 'Denied'}")
+        return self.velocitiesWithinZone[-1]
 
-    # sleep(0.25)
-    
-    return distance >= (minDistance + droneRadius)**2 and velocity <= DRONE_MAX_VELOCITY
+    def velocityIsApprovedForCurrentDistance(self, distance, velocity,
+                                             droneRadius, humanRadius):
+        # reversedLimits = sorted(self.zoneLimits, reverse=True)
+        # reversedVelocities = np.array(sorted(self.velocitiesWithinZone, reverse=True))
+
+        diffs = self.velocitiesWithinZone - velocity
+        minDistance = 99999999
+
+        for i, diff in enumerate(diffs):
+            if diff > 0:
+                minDistance = self.zoneLimits[i - 1]
+                break
+
+        # appr = distance >= (minDistance + droneRadius)**2 and velocity <= DRONE_MAX_VELOCITY
+        # print(f"{round(velocity, 2)} m/s -> min. D = {minDistance} m | Approved if {round(distance, 2)} ≥ {round((minDistance + droneRadius)**2, 2)} -> {'Approved' if appr else 'Denied'}")
+
+        # sleep(0.25)
+
+        return distance >= (minDistance +
+                            droneRadius)**2 and velocity <= DRONE_MAX_VELOCITY
 
 
 def plotVelocities():
-  totTime = 4
-  distances = np.arange(0, totTime, 0.1)
+    totTime = 4
+    distances = np.arange(0, totTime, 0.1)
 
-  cbfs = [
-    CBF(CBF.DECELERATION_MAX_MIN, CBF.EPSILON_MAX), # Slow breaking + far away from goal => conservative
-    CBF(CBF.DECELERATION_MAX_MAX, CBF.EPSILON_MIN), # Hard breaking + close to the goal => liberal
-  ]
+    cbfs = [
+        CBF(CBF.DECELERATION_MAX_MIN, CBF.EPSILON_MAX
+            ),  # Slow breaking + far away from goal => conservative
+        CBF(CBF.DECELERATION_MAX_MAX,
+            CBF.EPSILON_MIN),  # Hard breaking + close to the goal => liberal
+    ]
 
-  for cbf in cbfs:
-    maxVelocities = np.array([cbf.maxVelocityForCurrentDistance(distance) for distance in distances])
+    for cbf in cbfs:
+        maxVelocities = np.array([
+            cbf.maxVelocityForCurrentDistance(distance)
+            for distance in distances
+        ])
 
-    fig, ax = plt.subplots()
+        fig, ax = plt.subplots()
 
-    ax.set_xlim(-0.1, totTime)
+        ax.set_xlim(-0.1, totTime)
 
-    fontSize = 25
+        fontSize = 25
 
-    ax.set_ylabel(r'velocity (m/s)', fontsize=fontSize)
-    ax.set_ylim(-0.05, DRONE_MAX_VELOCITY + 0.25)
+        ax.set_ylabel(r'velocity (m/s)', fontsize=fontSize)
+        ax.set_ylim(-0.05, DRONE_MAX_VELOCITY + 0.25)
 
-    ax.set_xlabel(r'distance (m)', fontsize=fontSize)
+        ax.set_xlabel(r'distance (m)', fontsize=fontSize)
+
+        # function = r'$v_{safe\&fast} = min(v_{max}, \sqrt[+]{2 * | a_{max} | * (d_h - \epsilon)})$'
+        # values = r'$v_{max} = $ ' + str(v_max) + r', $a_{max} = $ ' + str(a_max) + r', $\epsilon = $ ' + str(e)
+        # ax.set_title(f'Fastest possible velocities based on distance to human that are still safe', fontsize=fontSize)
+        sns.lineplot(distances, maxVelocities, marker="o", ax=ax)
+        saveFig(
+            fig,
+            f"cbf - a_max={round(cbf.decceleration_max, 2)} | e={round(cbf.epsilon, 2)} | v_max={round(DRONE_MAX_VELOCITY, 2)}",
+            30 / 25)
+
+    # plt.show()
 
 
-    # function = r'$v_{safe\&fast} = min(v_{max}, \sqrt[+]{2 * | a_{max} | * (d_h - \epsilon)})$'
-    # values = r'$v_{max} = $ ' + str(v_max) + r', $a_{max} = $ ' + str(a_max) + r', $\epsilon = $ ' + str(e)
-    # ax.set_title(f'Fastest possible velocities based on distance to human that are still safe', fontsize=fontSize)
-    sns.lineplot(distances, maxVelocities, marker="o", ax=ax)
-    saveFig(fig, f"cbf - a_max={round(cbf.decceleration_max, 2)} | e={round(cbf.epsilon, 2)} | v_max={round(DRONE_MAX_VELOCITY, 2)}", 30/25)
-
-  # plt.show()
-  
 if __name__ == "__main__":
-  # plotVelocities()
-  h = HeuristicSafetyFunction()
+    # plotVelocities()
+    h = HeuristicSafetyFunction()
 
-  maxV = h.maxVelocityForCurrentDistance(2)
+    maxV = h.maxVelocityForCurrentDistance(2)

@@ -24,11 +24,11 @@ from PIL import Image
 
 from utils.globalVariables import PATH_TO_ROOT
 
-PRINT_AT = 5000
+PRINT_AT = 10000
 
 
 class Planner:
-    HUMAN = Obstacle(0.75, -1.0, 0.25)
+    HUMAN = Obstacle(0.5, -1.0, 0.25)
 
     # HUMAN = Obstacle(0.75, 2.0, 0.25)
 
@@ -163,7 +163,7 @@ class Planner:
                     self.visitedMovements.add(newMovement.key)
 
         numMovements = len(self.movements)
-        valuesToKeep = 200
+        valuesToKeep = 10000
         startIdx = max(numMovements - valuesToKeep, 0)
         self.movements = self.movements[startIdx:numMovements]
 

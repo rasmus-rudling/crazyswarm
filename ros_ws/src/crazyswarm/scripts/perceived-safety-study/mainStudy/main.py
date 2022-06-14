@@ -176,12 +176,12 @@ def stage1():
         savedTrajectoriesDir=
         f"{PATH_TO_ROOT}/mainStudy/participants/{p.id}/savedTrajectories")
 
-    for _ in range(NUM_TRAJECTORIES_TO_TUNE_CBF):
-        gp.startProcess()
+    gp.startProcess()
 
 
 def stage2():
     """ Test safety functions """
+    # TODO: implement
     pass
 
 
