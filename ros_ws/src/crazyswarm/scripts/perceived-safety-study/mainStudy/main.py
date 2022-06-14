@@ -78,7 +78,10 @@ def calcSF1():
                         planner=planner)
         trajectory.saveToCsv(f"{filePath}/trajectoryData.csv")
 
-        os.mkdir(f"{filePath}/animationFrames")
+        try:
+            os.mkdir(f"{filePath}/animationFrames")
+        except:
+            pass
 
         recordFinalTrajectory(finalDroneState, planner)
 
@@ -107,7 +110,11 @@ def calcSF2():
                         planner=planner)
         trajectory.saveToCsv(f"{filePath}/trajectoryData.csv")
 
-        os.mkdir(f"{filePath}/animationFrames")
+        try:
+            os.mkdir(f"{filePath}/animationFrames")
+        except:
+            pass
+
         recordFinalTrajectory(finalDroneState, planner)
 
 

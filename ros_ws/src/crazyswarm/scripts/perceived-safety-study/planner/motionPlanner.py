@@ -22,401 +22,452 @@ from threading import Thread
 import glob
 from PIL import Image
 
+from utils.globalVariables import PATH_TO_ROOT
+
 PRINT_AT = 5000
 
+
 class Planner:
-  HUMAN = Obstacle(0.75, -1.0, 0.25)
-  # HUMAN = Obstacle(0.75, 2.0, 0.25)
+    HUMAN = Obstacle(0.75, -1.0, 0.25)
 
-  def __init__(
-    self, 
-    dt: 
-    float=0.1, 
-    obstacles: List["Obstacle"]=[], 
-    flyZone: "FlyZone"=MOCAP_FLY_ZONE, 
-    verboseLevel: int=0, sf=None, 
-    possibleAccelerations=[1.0, 0.6, 0.3, 0.0, -0.3, -0.6, -1.0]
-  ) -> None:
-    self.dt = dt
-    # Movement.POSSIBLE_ACCELERATIONS = [acc * dt for acc in possibleAccelerations]
-    self.originalPossibleAccelerations = possibleAccelerations
-    self.possibleAccelerations = [round(acc * dt, 3) for acc in possibleAccelerations]
-    self.obstacles = obstacles
-    self.flyZone = flyZone
-    self.verboseLevel = verboseLevel
-    self.sf = sf
+    # HUMAN = Obstacle(0.75, 2.0, 0.25)
 
-    self.iterations = 0
-    self.currentGoalState = None
-    self.currentStartState = None
-    self.numIterationsForLastPath = None
-    self.movements = []
-    self.visitedMovements = set()
+    def __init__(
+            self,
+            dt: float = 0.1,
+            obstacles: List["Obstacle"] = [],
+            flyZone: "FlyZone" = MOCAP_FLY_ZONE,
+            verboseLevel: int = 0,
+            sf=None,
+            possibleAccelerations=[1.0, 0.6, 0.3, 0.0, -0.3, -0.6,
+                                   -1.0]) -> None:
+        self.dt = dt
+        # Movement.POSSIBLE_ACCELERATIONS = [acc * dt for acc in possibleAccelerations]
+        self.originalPossibleAccelerations = possibleAccelerations
+        self.possibleAccelerations = [
+            round(acc * dt, 3) for acc in possibleAccelerations
+        ]
+        self.obstacles = obstacles
+        self.flyZone = flyZone
+        self.verboseLevel = verboseLevel
+        self.sf = sf
 
-     # Animation
-    self.saveAnimation = False
-    self.lengthOfAnimation = 10
-    self.animationFrameDuration = 0.25  # In seconds
-    self.numAnimationFrames = self.lengthOfAnimation / self.animationFrameDuration
-    self.currentAnimationFrame = 0
-    self.animationKey = None
+        self.iterations = 0
+        self.currentGoalState = None
+        self.currentStartState = None
+        self.numIterationsForLastPath = None
+        self.movements = []
+        self.visitedMovements = set()
 
-    self.computationTime = -1
+        # Animation
+        self.saveAnimation = False
+        self.lengthOfAnimation = 10
+        self.animationFrameDuration = 0.25  # In seconds
+        self.numAnimationFrames = self.lengthOfAnimation / self.animationFrameDuration
+        self.currentAnimationFrame = 0
+        self.animationKey = None
 
-  @plotlive
-  def plotStateLive(self, droneState: "DroneState", ax: Axes, fig: Figure, isFinalDroneState: bool, fileName=None) -> None:
-    plotPathToCurrentDroneStateLive(
-      droneState=droneState, 
-      planner=self,
-      ax=ax,
-      fig=fig,
-      isFinalDroneState=isFinalDroneState,
-      fileName=fileName
-    )
-    # time.sleep(0.1)
+        self.computationTime = -1
 
+    @plotlive
+    def plotStateLive(self,
+                      droneState: "DroneState",
+                      ax: Axes,
+                      fig: Figure,
+                      isFinalDroneState: bool,
+                      fileName=None) -> None:
+        plotPathToCurrentDroneStateLive(droneState=droneState,
+                                        planner=self,
+                                        ax=ax,
+                                        fig=fig,
+                                        isFinalDroneState=isFinalDroneState,
+                                        fileName=fileName)
+        # time.sleep(0.1)
 
-  def printMovements(self) -> None:
-    print("\n-Movements-")
-    for movement in self.movements:
-      print(movement)
-    print("---")
+    def printMovements(self) -> None:
+        print("\n-Movements-")
+        for movement in self.movements:
+            print(movement)
+        print("---")
 
+    def animationPlot(self,
+                      droneState: "DroneState",
+                      ax: Axes,
+                      fig: Figure,
+                      isFinalDroneState: bool = False) -> None:
+        if self.numIterationsForLastPath is not None:
+            divider = self.numAnimationFrames - 3
+            plotAt = self.numIterationsForLastPath // divider
 
-  def animationPlot(self, droneState: "DroneState", ax: Axes, fig: Figure, isFinalDroneState:bool=False) -> None:
-    if self.numIterationsForLastPath is not None:
-      divider = self.numAnimationFrames - 3
-      plotAt = self.numIterationsForLastPath // divider
-    
-      if plotAt == 0.0:
-        plotAt = 1
-      
-      plotNow = self.iterations % plotAt == 0 or self.iterations == 0
+            if plotAt == 0.0:
+                plotAt = 1
 
-      if plotNow or isFinalDroneState:
-        self.currentAnimationFrame += 1
-        self.plotStateLive(droneState, ax, fig, isFinalDroneState)
+            plotNow = self.iterations % plotAt == 0 or self.iterations == 0
 
+            if plotNow or isFinalDroneState:
+                self.currentAnimationFrame += 1
+                self.plotStateLive(droneState, ax, fig, isFinalDroneState)
 
-  def printStatus(self, droneState: "DroneState") -> None:
-    print()
-    print(f"#{self.iterations}\t\tC={round(droneState.selectedMovement.newDistanceToGoal, 3)}m\t\tv={round(droneState.velocity, 3)}m/s")
-
-
-  def getYawForInitDroneState(self, initDronePos: "Position", goalState: "DroneGoalState"):
-    initYaw = math.atan2(goalState.y - initDronePos.y, goalState.x - initDronePos.x)
-    return initYaw
-
-
-  def getFinalDroneState(self, movementThatReachedGoal: "Movement"):
-    finalDroneState = movementThatReachedGoal.associatedDroneState
-    finalDroneState.selectedMovement = movementThatReachedGoal
-
-    # finalDroneState = DroneState(penultimateDroneState)
-    return finalDroneState
-
-  def addMovements(self, associatedDroneState: "DroneState") -> Tuple[bool, "Movement"]:
-    angles = [
-      np.deg2rad(-5.0), 
-      np.deg2rad(0.0), 
-      np.deg2rad(5.0)
-    ]
-
-    closeDistance = 0.5
-
-    accelerations = self.possibleAccelerations
-
-    if associatedDroneState.parent is not None and associatedDroneState.parent.selectedMovement.newDistanceToGoal < closeDistance**2:
-      accelerations = []
-
-      for acc in self.possibleAccelerations:
-        newVelocity = associatedDroneState.parent.selectedMovement.velocity + acc
-
-        if newVelocity <= 0.75:
-          accelerations.append(acc)
-      
-      if len(accelerations) == 0:
-        accelerations.append(self.possibleAccelerations[-1])
-
-    for angle in angles:
-      for acceleration in accelerations:
-        newMovement = Movement(
-          angle=angle,
-          acceleration=acceleration,
-          planner=self,
-          associatedDroneState=associatedDroneState
+    def printStatus(self, droneState: "DroneState") -> None:
+        print()
+        print(
+            f"#{self.iterations}\t\tC={round(droneState.selectedMovement.newDistanceToGoal, 3)}m\t\tv={round(droneState.velocity, 3)}m/s"
         )
 
-        if newMovement.willHaveReachedGoal:
-          return True, newMovement
-        elif newMovement.isValid and newMovement.key not in self.visitedMovements:
-          reverse_insort(self.movements, newMovement)
-          self.visitedMovements.add(newMovement.key)
-    
-    numMovements = len(self.movements)
-    valuesToKeep = 200
-    startIdx = max(numMovements-valuesToKeep, 0)
-    self.movements = self.movements[startIdx:numMovements]
+    def getYawForInitDroneState(self, initDronePos: "Position",
+                                goalState: "DroneGoalState"):
+        initYaw = math.atan2(goalState.y - initDronePos.y,
+                             goalState.x - initDronePos.x)
+        return initYaw
 
-    if (self.verboseLevel == 2 or self.verboseLevel == 3) and self.iterations % PRINT_AT == 0:
-      print(f"#movements = {numMovements}")
+    def getFinalDroneState(self, movementThatReachedGoal: "Movement"):
+        finalDroneState = movementThatReachedGoal.associatedDroneState
+        finalDroneState.selectedMovement = movementThatReachedGoal
 
-    return False, None
+        # finalDroneState = DroneState(penultimateDroneState)
+        return finalDroneState
 
-  def addMovementsWithThreading(self, associatedDroneState: "DroneState", multiThread=False) -> Tuple[bool, "Movement"]:
-    def addNewMovement(angle, acceleration, info):
-      newMovement = Movement(
-          angle=angle,
-          acceleration=acceleration,
-          planner=self,
-          associatedDroneState=associatedDroneState
-        )
+    def addMovements(
+            self,
+            associatedDroneState: "DroneState") -> Tuple[bool, "Movement"]:
+        angles = [np.deg2rad(-5.0), np.deg2rad(0.0), np.deg2rad(5.0)]
 
-      if newMovement.willHaveReachedGoal:
-        info[0] = True
-      elif newMovement.isValid and newMovement.key not in self.visitedMovements:
-        reverse_insort(self.movements, newMovement)
-        self.visitedMovements.add(newMovement.key)
+        closeDistance = 0.5
 
-      info[1] = newMovement
+        accelerations = self.possibleAccelerations
 
-    
-    if multiThread:
-      threadTasks = []
-      infoPerThread = [[False, None]] * (len(Movement.POSSIBLE_ANGLES) * len(self.possibleAccelerations))
+        if associatedDroneState.parent is not None and associatedDroneState.parent.selectedMovement.newDistanceToGoal < closeDistance**2:
+            accelerations = []
 
-      threadIdx = 0
+            for acc in self.possibleAccelerations:
+                newVelocity = associatedDroneState.parent.selectedMovement.velocity + acc
 
-      for angle in Movement.POSSIBLE_ANGLES:
-        for acceleration in self.possibleAccelerations:
-          t = Thread(target=addNewMovement, args=(angle, acceleration, infoPerThread[threadIdx]))
-          t.start()
-          threadTasks.append(t)
+                if newVelocity <= 0.75:
+                    accelerations.append(acc)
 
-          threadIdx += 1
+            if len(accelerations) == 0:
+                accelerations.append(self.possibleAccelerations[-1])
 
-      for tIdx, threadTask in enumerate(threadTasks):
-        threadTask.join()
-        reachedGoal = infoPerThread[tIdx][0]
+        for angle in angles:
+            for acceleration in accelerations:
+                newMovement = Movement(
+                    angle=angle,
+                    acceleration=acceleration,
+                    planner=self,
+                    associatedDroneState=associatedDroneState)
+
+                if newMovement.willHaveReachedGoal:
+                    return True, newMovement
+                elif newMovement.isValid and newMovement.key not in self.visitedMovements:
+                    reverse_insort(self.movements, newMovement)
+                    self.visitedMovements.add(newMovement.key)
+
+        numMovements = len(self.movements)
+        valuesToKeep = 200
+        startIdx = max(numMovements - valuesToKeep, 0)
+        self.movements = self.movements[startIdx:numMovements]
+
+        if (self.verboseLevel == 2
+                or self.verboseLevel == 3) and self.iterations % PRINT_AT == 0:
+            print(f"#movements = {numMovements}")
+
+        return False, None
+
+    def addMovementsWithThreading(
+            self,
+            associatedDroneState: "DroneState",
+            multiThread=False) -> Tuple[bool, "Movement"]:
+
+        def addNewMovement(angle, acceleration, info):
+            newMovement = Movement(angle=angle,
+                                   acceleration=acceleration,
+                                   planner=self,
+                                   associatedDroneState=associatedDroneState)
+
+            if newMovement.willHaveReachedGoal:
+                info[0] = True
+            elif newMovement.isValid and newMovement.key not in self.visitedMovements:
+                reverse_insort(self.movements, newMovement)
+                self.visitedMovements.add(newMovement.key)
+
+            info[1] = newMovement
+
+        if multiThread:
+            threadTasks = []
+            infoPerThread = [[False, None]] * (len(Movement.POSSIBLE_ANGLES) *
+                                               len(self.possibleAccelerations))
+
+            threadIdx = 0
+
+            for angle in Movement.POSSIBLE_ANGLES:
+                for acceleration in self.possibleAccelerations:
+                    t = Thread(target=addNewMovement,
+                               args=(angle, acceleration,
+                                     infoPerThread[threadIdx]))
+                    t.start()
+                    threadTasks.append(t)
+
+                    threadIdx += 1
+
+            for tIdx, threadTask in enumerate(threadTasks):
+                threadTask.join()
+                reachedGoal = infoPerThread[tIdx][0]
+
+                if reachedGoal:
+                    return infoPerThread[tIdx]
+
+        else:
+            info = [False, None]
+
+            for angle in Movement.POSSIBLE_ANGLES:
+                for acceleration in self.possibleAccelerations:
+                    addNewMovement(angle, acceleration, info)
+
+                    reachedGoal = info[0]
+
+                    if reachedGoal:
+                        return info
+
+        numMovements = len(self.movements)
+        valuesToKeep = 5000
+        startIdx = max(numMovements - valuesToKeep, 0)
+        self.movements = self.movements[startIdx:numMovements]
+
+        if (self.verboseLevel == 2
+                or self.verboseLevel == 3) and self.iterations % PRINT_AT == 0:
+            print(f"#movements = {numMovements}")
+
+        return False, None
+
+    def findPathToGoal(self, initDroneState: "DroneState",
+                       goalState: "DroneGoalState"):
+        startTime = time()
+
+        self.currentGoalState = goalState
+        self.currentStartState = initDroneState
+
+        reachedGoal, movementThatReachedGoal = self.addMovements(
+            initDroneState)
+
+        if (self.saveAnimation and self.numIterationsForLastPath is not None
+            ) or self.verboseLevel == 1 or self.verboseLevel == 3:
+            fig, ax = plt.subplots()
+        else:
+            fig, ax = None, None
+
+        if self.saveAnimation:
+            self.animationPlot(initDroneState, ax, fig)
 
         if reachedGoal:
-            return infoPerThread[tIdx]
+            finalDroneState = self.getFinalDroneState(movementThatReachedGoal)
+            return finalDroneState, True
 
-    else:
-      info = [False, None]
+        while len(self.movements) > 0:
+            self.iterations += 1
 
-      for angle in Movement.POSSIBLE_ANGLES:
-        for acceleration in self.possibleAccelerations:
-          addNewMovement(angle, acceleration, info)
+            cheapestMovement = self.movements.pop()
 
-          reachedGoal = info[0]
+            associatedDroneState = cheapestMovement.associatedDroneState
 
-          if reachedGoal:
-            return info
+            associatedDroneState.selectedMovement = cheapestMovement
 
-    numMovements = len(self.movements)
-    valuesToKeep = 5000
-    startIdx = max(numMovements-valuesToKeep, 0)
-    self.movements = self.movements[startIdx:numMovements]
+            newDroneState = DroneState(associatedDroneState)
 
-    if (self.verboseLevel == 2 or self.verboseLevel == 3) and self.iterations % PRINT_AT == 0:
-      print(f"#movements = {numMovements}")
+            if self.verboseLevel == 1 and self.iterations % PRINT_AT == 0:
+                self.plotStateLive(newDroneState, ax, fig, False)
+            elif self.verboseLevel == 2 and self.iterations % PRINT_AT == 0:
+                self.printStatus(associatedDroneState)
+            elif self.verboseLevel == 3 and self.iterations % PRINT_AT == 0:
+                self.plotStateLive(newDroneState, ax, fig, False)
+                self.printStatus(associatedDroneState)
 
-    return False, None
+            if self.saveAnimation:
+                self.animationPlot(newDroneState, ax, fig)
 
+            reachedGoal, movementThatReachedGoal = self.addMovements(
+                newDroneState)
 
-  def findPathToGoal(self, initDroneState: "DroneState", goalState: "DroneGoalState"):
-    startTime = time()
-    
-    self.currentGoalState = goalState
-    self.currentStartState = initDroneState
+            if reachedGoal:
+                finalDroneState = self.getFinalDroneState(
+                    movementThatReachedGoal)
 
-    reachedGoal, movementThatReachedGoal = self.addMovements(initDroneState)
+                if self.saveAnimation:
+                    self.animationPlot(finalDroneState, ax, fig, True)
 
-    if (self.saveAnimation and self.numIterationsForLastPath is not None) or self.verboseLevel == 1 or self.verboseLevel == 3:
-      fig, ax = plt.subplots()
-    else:
-      fig, ax = None, None
+                endTime = time()
+                self.computationTime = endTime - startTime
 
-
-    if self.saveAnimation:
-      self.animationPlot(initDroneState, ax, fig)
-
-    if reachedGoal:
-      finalDroneState = self.getFinalDroneState(movementThatReachedGoal)
-      return finalDroneState, True
-
-    while len(self.movements) > 0:
-      self.iterations += 1
-
-      cheapestMovement = self.movements.pop()
-
-      associatedDroneState = cheapestMovement.associatedDroneState
-
-      associatedDroneState.selectedMovement = cheapestMovement
-
-      newDroneState = DroneState(associatedDroneState)
-
-      if self.verboseLevel == 1 and self.iterations % PRINT_AT == 0:
-        self.plotStateLive(newDroneState, ax, fig, False)
-      elif self.verboseLevel == 2 and self.iterations % PRINT_AT == 0:
-        self.printStatus(associatedDroneState)
-      elif self.verboseLevel == 3 and self.iterations % PRINT_AT == 0:
-        self.plotStateLive(newDroneState, ax, fig, False)
-        self.printStatus(associatedDroneState)
-      
-
-      if self.saveAnimation:
-        self.animationPlot(newDroneState, ax, fig)
-
-      reachedGoal, movementThatReachedGoal = self.addMovements(newDroneState)
-
-      if reachedGoal:
-        finalDroneState = self.getFinalDroneState(movementThatReachedGoal)
-          
-        if self.saveAnimation:
-          self.animationPlot(finalDroneState, ax, fig, True)
+                return finalDroneState, True
 
         endTime = time()
         self.computationTime = endTime - startTime
 
-        return finalDroneState, True
+        return None, False
 
-    endTime = time()
-    self.computationTime = endTime - startTime
+    def setKey(self,
+               finalDroneState: "DroneState",
+               isFinalTrajectory: bool = False) -> bool:
+        dateString = str(datetime.now()).split(".")[0]
 
-    return None, False
+        if self.sf.name == "cbf":
+            self.animationKey = f"{dateString} | eps={round(self.sf.epsilon, 2)} a_max={round(self.sf.decceleration_max, 2)} | D={finalDroneState.depth} "
+        else:
+            self.animationKey = f"{dateString} | Heuristic | D={finalDroneState.depth} "
 
+        if isFinalTrajectory:
+            self.animationKey += " | Final trajectory"
 
-  def setKey(self, finalDroneState: "DroneState", isFinalTrajectory:bool=False) -> bool:
-    dateString = str(datetime.now()).split(".")[0]
-
-    if self.sf.name == "cbf":
-      self.animationKey = f"{dateString} | eps={round(self.sf.epsilon, 2)} a_max={round(self.sf.decceleration_max, 2)} | D={finalDroneState.depth} "
-    else:
-      self.animationKey = f"{dateString} | Heuristic | D={finalDroneState.depth} "
-
-    if isFinalTrajectory:
-      self.animationKey += " | Final trajectory"
-
-
-  def resetParams(self):
-    self.currentAnimationFrame = 0
-    self.iterations = 0
-    self.movements = []
-    self.visitedMovements = set()
-    self.currentGoalState = None
-    self.currentStartState = None
-    self.numIterationsForLastPath = None
+    def resetParams(self):
+        self.currentAnimationFrame = 0
+        self.iterations = 0
+        self.movements = []
+        self.visitedMovements = set()
+        self.currentGoalState = None
+        self.currentStartState = None
+        self.numIterationsForLastPath = None
 
 
-def makeAnimationFromTrajectory(planner: "Planner", dt:float=None, lastFrameDuration:int=5000):
-  def getImageNum(imageName: str) -> int:
-    return int(imageName.split("/")[-1][:-4])
+def makeAnimationFromTrajectory(planner: "Planner",
+                                dt: float = None,
+                                lastFrameDuration: int = 5000):
 
-  if dt is None:
-    dt = planner.animationFrameDuration * 1000
+    def getImageNum(imageName: str) -> int:
+        return int(imageName.split("/")[-1][:-4])
 
-  images = glob.glob(f"savedTrajectories/{planner.animationKey}/animationFrames/*.png")
+    if dt is None:
+        dt = planner.animationFrameDuration * 1000
 
-  images.sort(key=getImageNum)
+    try:
+        images = glob.glob(
+            f"savedTrajectories/{planner.animationKey}/animationFrames/*.png")
 
-  durations = []
-  numImages = len(images)
+        images.sort(key=getImageNum)
 
-  for _ in range(numImages-1):
-    durations.append(dt)
+        durations = []
+        numImages = len(images)
 
-  durations.append(lastFrameDuration)
+        for _ in range(numImages - 1):
+            durations.append(dt)
 
-  imagePath = f"savedTrajectories/{planner.animationKey}/animation.gif"
+        durations.append(lastFrameDuration)
 
-  frames = [Image.open(image) for image in images]
+        imagePath = f"savedTrajectories/{planner.animationKey}/animation.gif"
+        frames = [Image.open(image) for image in images]
 
-  frames[0].save(
-    imagePath,
-    save_all=True, 
-    append_images=frames[1:], 
-    optimize=False, 
-    duration=durations, 
-    loop=0
-  )
+        frames[0].save(imagePath,
+                       save_all=True,
+                       append_images=frames[1:],
+                       optimize=False,
+                       duration=durations,
+                       loop=0)
+    except:
+        images = glob.glob(
+            f"{PATH_TO_ROOT}/{planner.animationKey}/animationFrames/*.png")
+
+        images.sort(key=getImageNum)
+
+        durations = []
+        numImages = len(images)
+
+        for _ in range(numImages - 1):
+            durations.append(dt)
+
+        durations.append(lastFrameDuration)
+
+        imagePath = f"{PATH_TO_ROOT}/{planner.animationKey}/animation.gif"
+        frames = [Image.open(image) for image in images]
+
+        frames[0].save(imagePath,
+                       save_all=True,
+                       append_images=frames[1:],
+                       optimize=False,
+                       duration=durations,
+                       loop=0)
 
 
-def recordAnimation(initDronePosition: "Position", planner: "Planner", goalStates: List["DroneGoalState"]):
-  planner.saveAnimation = True
-  numGoalStates = len(goalStates)
-  currentDroneState = initDronePosition
+def recordAnimation(initDronePosition: "Position", planner: "Planner",
+                    goalStates: List["DroneGoalState"]):
+    planner.saveAnimation = True
+    numGoalStates = len(goalStates)
+    currentDroneState = initDronePosition
 
-  for goalStateIdx in range(numGoalStates):
-    currentGoalState = goalStates[goalStateIdx]
-    
-    initDroneState = DroneState(
-        parent=None, 
-        x=currentDroneState.x, 
-        y=currentDroneState.y,
-        yaw=planner.getYawForInitDroneState(currentDroneState, currentGoalState)
-      )
+    for goalStateIdx in range(numGoalStates):
+        currentGoalState = goalStates[goalStateIdx]
 
-    planner.currentStartState = initDroneState
+        initDroneState = DroneState(parent=None,
+                                    x=currentDroneState.x,
+                                    y=currentDroneState.y,
+                                    yaw=planner.getYawForInitDroneState(
+                                        currentDroneState, currentGoalState))
 
-    for i in range(2):
-      finalDroneState, foundGoalState = planner.findPathToGoal(initDroneState, currentGoalState)
-      currentDroneState = finalDroneState
+        planner.currentStartState = initDroneState
 
-      if foundGoalState:
-        print("Reached the goal! :)")
-        
-      else:
-        print("No path found :(")
-        break
+        for i in range(2):
+            finalDroneState, foundGoalState = planner.findPathToGoal(
+                initDroneState, currentGoalState)
+            currentDroneState = finalDroneState
 
-      if i == 0:
-        planner.setKey(currentDroneState)
+            if foundGoalState:
+                print("Reached the goal! :)")
+
+            else:
+                print("No path found :(")
+                break
+
+            if i == 0:
+                planner.setKey(currentDroneState)
+
+                if planner.saveAnimation:
+                    os.mkdir(f"animationFrames/{planner.animationKey}")
+
+                planner.numIterationsForLastPath = planner.iterations
+                planner.iterations = 0
+                planner.movements = []
+                planner.visitedMovements = set()
 
         if planner.saveAnimation:
-          os.mkdir(f"animationFrames/{planner.animationKey}")
+            planner.makeAnimationFromTrajectory()
 
-        planner.numIterationsForLastPath = planner.iterations
-        planner.iterations = 0
-        planner.movements = []
-        planner.visitedMovements = set()
-      
-    if planner.saveAnimation:
-      planner.makeAnimationFromTrajectory()
-    
-    if goalStateIdx < numGoalStates - 1:
-      planner.numIterationsForLastPath = None
-      planner.currentAnimationFrame = 0
-      planner.iterations = 0
-      planner.movements = []
-      planner.visitedMovements = set()
-      
-  
-  planner.saveAnimation = False
+        if goalStateIdx < numGoalStates - 1:
+            planner.numIterationsForLastPath = None
+            planner.currentAnimationFrame = 0
+            planner.iterations = 0
+            planner.movements = []
+            planner.visitedMovements = set()
+
+    planner.saveAnimation = False
 
 
-def recordFinalTrajectory(finalDroneState: "DroneState", planner: "Planner", onlyFinalFrame=False, fileName=None):
-  planner.saveAnimation = True
+def recordFinalTrajectory(finalDroneState: "DroneState",
+                          planner: "Planner",
+                          onlyFinalFrame=False,
+                          fileName=None):
+    planner.saveAnimation = True
 
-  statesInFinalTrajectory = [finalDroneState]
+    statesInFinalTrajectory = [finalDroneState]
 
-  currentDroneState = finalDroneState.parent
+    currentDroneState = finalDroneState.parent
 
-  while currentDroneState is not None:
-    statesInFinalTrajectory.append(currentDroneState)
-    currentDroneState = currentDroneState.parent
-  
-  numDroneStatesInFinalTrajectory = len(statesInFinalTrajectory)
-  fig, ax = plt.subplots()
-  
-  if not onlyFinalFrame:
-    for droneStateIdx in range(numDroneStatesInFinalTrajectory-1, 0, -1):
-      currentDroneState = statesInFinalTrajectory[droneStateIdx]
-      planner.plotStateLive(currentDroneState, ax, fig, False)
-      planner.currentAnimationFrame += 1
+    while currentDroneState is not None:
+        statesInFinalTrajectory.append(currentDroneState)
+        currentDroneState = currentDroneState.parent
 
-  planner.plotStateLive(statesInFinalTrajectory[0], ax, fig, True, fileName=fileName)
+    numDroneStatesInFinalTrajectory = len(statesInFinalTrajectory)
+    fig, ax = plt.subplots()
 
-  if not onlyFinalFrame:
-    makeAnimationFromTrajectory(planner, dt=planner.dt * 1000, lastFrameDuration=2000)
+    if not onlyFinalFrame:
+        for droneStateIdx in range(numDroneStatesInFinalTrajectory - 1, 0, -1):
+            currentDroneState = statesInFinalTrajectory[droneStateIdx]
+            planner.plotStateLive(currentDroneState, ax, fig, False)
+            planner.currentAnimationFrame += 1
+
+    planner.plotStateLive(statesInFinalTrajectory[0],
+                          ax,
+                          fig,
+                          True,
+                          fileName=fileName)
+
+    if not onlyFinalFrame:
+        makeAnimationFromTrajectory(planner,
+                                    dt=planner.dt * 1000,
+                                    lastFrameDuration=2000)
