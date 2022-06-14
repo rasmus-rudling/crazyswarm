@@ -270,8 +270,13 @@ class GaussianProcess:
       
       dirs = self.savedTrajectoriesDir.split("/")
 
-      planner.animationKey = f"{dirs[-1]}/Round #{len(self.perceivedSafety)}.{self.currentParticipant.id} - " + planner.animationKey
-      filePath = f"{'/'.join(dirs[:-1])}/{planner.animationKey}"
+      if "mainStudy" in self.savedTrajectoriesDir:
+        planner.animationKey = f"{dirs[-2]}/{dirs[-1]}/Round #{len(self.perceivedSafety)}.{self.currentParticipant.id} - " + planner.animationKey
+        filePath = f"{'/'.join(dirs[:-2])}/{planner.animationKey}"
+      else:
+        planner.animationKey = f"{dirs[-1]}/Round #{len(self.perceivedSafety)}.{self.currentParticipant.id} - " + planner.animationKey
+        filePath = f"{'/'.join(dirs[:-1])}/{planner.animationKey}"
+      
       os.mkdir(filePath)
 
       trajectory = Trajectory(finalDroneState=currentDroneState)

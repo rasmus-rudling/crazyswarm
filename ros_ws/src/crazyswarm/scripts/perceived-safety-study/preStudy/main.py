@@ -1,7 +1,9 @@
 import sys
 
+
 sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study')
 sys.path.append('/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils')
+from globalVariables import NUM_TRAJECTORIES_TO_TUNE_CBF
 
 from Participant import Participant
 
@@ -18,8 +20,6 @@ def updateSafetyFunction():
     except:
         participantEmail = userInput
 
-    Participant.CSV_PATH = "../utils/participants.csv"
-
     if participantID is not None:
         p = Participant.getParticipantById(participantID)
     else:
@@ -28,11 +28,11 @@ def updateSafetyFunction():
     gp = GaussianProcess(
         pID=p.id, 
         safetyFunction="sf2",
-        csvFileName="sf2Input.csv",
+        csvFileName="sf2 - input.csv",
         savedTrajectoriesDir=f"{PATH_TO_ROOT}/preStudy/savedTrajectories"
     )
     
-    for _ in range(5):
+    for _ in range(NUM_TRAJECTORIES_TO_TUNE_CBF):
         gp.startProcess()
     
 
@@ -40,7 +40,7 @@ def plotSafetyFunction():
     gp = GaussianProcess(
         pID=0, 
         safetyFunction="sf2",
-        csvFileName="sf2Input.csv",
+        csvFileName="sf2 - input.csv",
         savedTrajectoriesDir=f"{PATH_TO_ROOT}/preStudy/savedTrajectories"
     )
 

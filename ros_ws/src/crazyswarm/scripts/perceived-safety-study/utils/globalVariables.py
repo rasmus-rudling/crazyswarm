@@ -8,3 +8,5 @@ GOAL_OFFSET_Y = -0.5
 POSSIBLE_ACCELERATIONS = [1.0, 0.6, 0.3, 0.0, -0.3, -0.6, -1.0]
 
 PATH_TO_ROOT = "/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study"
+
+NUM_TRAJECTORIES_TO_TUNE_CBF = 3

@@ -35,7 +35,7 @@ class Planner:
   }
 
   HUMAN = Obstacle(0.75, -1.0, 0.25)
-  # HUMAN = Obstacle(0.75, 2.0, 0.25)
+  HUMAN = Obstacle(0.75, 2.0, 0.25)
 
   def __init__(self, dt: float, obstacles: List["Obstacle"], flyZone: "FlyZone", verboseLevel: int, cbf: "CBF", possibleAccelerations) -> None:
     self.dt = dt
