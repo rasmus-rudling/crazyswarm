@@ -1,3 +1,4 @@
+import csv
 import sys
 import os
 
@@ -13,6 +14,15 @@ from Participant import Participant
 from GaussianProcess import GaussianProcess
 from globalVariables import PATH_TO_ROOT
 
+
+def getSf2():
+    with open(f"{PATH_TO_ROOT}/preStudy/sf2 - input.csv", newline='') as csvfile:
+        lastRow = list(csv.reader(csvfile, delimiter=','))[-1]
+
+        bestEps = float(lastRow[4])
+        bestAMax = float(lastRow[5])
+    
+        return CBF(decceleration_max=bestAMax, epsilon=bestEps)
 
 def stage1():
     """ Create SF3.PID """
@@ -45,8 +55,8 @@ def stage2():
 
     safetyFunctions = {
         "1": HeuristicSafetyFunction(),
-        "2": CBF(), # TODO
-        "3": CBF() # TODO
+        "2": getSf2(),
+        # "3": getSf3(p.id)
     }
 
     trajectories = {
