@@ -1,9 +1,42 @@
 import csv
 from random import shuffle
 import numpy as np
+from pandas import array
 
 from helpers import userInput
 from globalVariables import PATH_TO_ROOT
+
+
+# How to use:
+# var conditions = ["A", "B", "C", "D"]
+# balancedLatinSquare(conditions, 0)  //=> ["A", "B", "D", "C"]
+# balancedLatinSquare(conditions, 1)  //=> ["B", "C", "A", "D"]
+# balancedLatinSquare(conditions, 2)  //=> ["C", "D", "B", "A"]
+
+def balancedLatinSquare(array, participantId):
+    result = []
+    j = 0
+    h = 0
+    
+    for i in range(len(array)):
+        val = 0
+
+        if (i < 2 or i % 2 != 0):
+            val = j
+            j += 1
+        else:
+            val = len(array) - h - 1
+            h += 1
+            
+        idx = (val + participantId) % len(array)
+        result.append(array[idx])
+        
+    if (len(array) % 2 != 0 and participantId % 2 != 0):
+        result = sorted(result, reverse=True)
+        
+    return result
+
+conditions = [1, 2, 3, 1, 2, 3, 1, 2, 3]
 
 
 PREVIOUS_DRONE_EXPERIENCE = {

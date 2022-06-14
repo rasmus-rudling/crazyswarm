@@ -26,6 +26,8 @@ class CBF:
     self.decceleration_max = decceleration_max
     self.epsilon = epsilon
 
+    print(f"a_max = {decceleration_max}")
+    print(f"epsilon = {epsilon}")
 
   def maxVelocityForCurrentDistance(self, distance):
     if np.isclose(distance, 0) or self.epsilon > distance:

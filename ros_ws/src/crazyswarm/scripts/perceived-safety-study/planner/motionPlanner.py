@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from planner.drone import DroneGoalState, DroneState
-from planner.flyZone import FlyZone
+from planner.flyZone import MOCAP_FLY_ZONE, FlyZone
 from planner.helperFunctions import reverse_insort
 from planner.movement import Movement
 
@@ -22,13 +22,21 @@ from threading import Thread
 import glob
 from PIL import Image
 
-PRINT_AT = 10000
+PRINT_AT = 5000
 
 class Planner:
   HUMAN = Obstacle(0.75, -1.0, 0.25)
   # HUMAN = Obstacle(0.75, 2.0, 0.25)
 
-  def __init__(self, dt: float, obstacles: List["Obstacle"], flyZone: "FlyZone", verboseLevel: int, sf, possibleAccelerations) -> None:
+  def __init__(
+    self, 
+    dt: 
+    float=0.1, 
+    obstacles: List["Obstacle"]=[], 
+    flyZone: "FlyZone"=MOCAP_FLY_ZONE, 
+    verboseLevel: int=0, sf=None, 
+    possibleAccelerations=[1.0, 0.6, 0.3, 0.0, -0.3, -0.6, -1.0]
+  ) -> None:
     self.dt = dt
     # Movement.POSSIBLE_ACCELERATIONS = [acc * dt for acc in possibleAccelerations]
     self.originalPossibleAccelerations = possibleAccelerations
