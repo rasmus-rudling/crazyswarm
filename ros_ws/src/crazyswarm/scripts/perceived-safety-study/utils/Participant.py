@@ -214,9 +214,6 @@ class Participant:
             "1",
             "2",
             "3",
-            "1",
-            "2",
-            "3",
         ]
         safetyFunctions = balancedLatinSquare(conditions, pID)
 
@@ -261,13 +258,3 @@ class Participant:
 if __name__ == "__main__":
     p = Participant.fromTerminalInput()  # Create new participant
     p.save()
-
-    # allParticipants = Participant.getAllParticipants()
-
-    # for p in allParticipants:
-    #     print(p)
-
-# TODO
-# 1. Lägg till, spara, läs in, hitta deltagare
-# 2. Skapa script för preStudy
-# 3. Skapa script för mainStudy

@@ -347,7 +347,7 @@ def flight5(droneController: "CrazyflieController"):
 
 def flight6(droneController: "CrazyflieController"):
     # csvFilePath = f"{PATH_TO_ROOT}/mainStudy/participants/{0}/savedTrajectories/SF3/trajectoryData.csv"
-    csvFilePath = f"{PATH_TO_ROOT}/savedTrajectories/2022-06-15 17:34:15 | Heuristic | D=133  | Final trajectory/trajectoryData.csv"
+    csvFilePath = f"{PATH_TO_ROOT}/savedTrajectories/2022-06-15 21:03:49 | Heuristic | D=133  | Final trajectory/trajectoryData.csv"
     plannedTrajectory = SimpleTrajectory(csv=csvFilePath, z_height=Z_HEIGHT)
 
     goalPose = Pose(plannedTrajectory.x[0], plannedTrajectory.y[0], Z_HEIGHT,
@@ -363,6 +363,8 @@ def flight6(droneController: "CrazyflieController"):
     droneController.hover(3.5)
 
     droneController.land(0.5)
+
+    plannedTrajectory.plotTrajectory(otherTrajectory=recordedTrajectory)
 
 
 if __name__ == "__main__":

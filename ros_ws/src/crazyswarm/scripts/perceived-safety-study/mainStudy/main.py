@@ -89,7 +89,7 @@ def calcSF1():
         except:
             pass
 
-        # recordFinalTrajectory(finalDroneState, planner)
+        recordFinalTrajectory(finalDroneState, planner)
 
 
 def calcSF2():
@@ -121,7 +121,7 @@ def calcSF2():
         except:
             pass
 
-        # recordFinalTrajectory(finalDroneState, planner)
+        recordFinalTrajectory(finalDroneState, planner)
 
 
 def calcSF3():
