@@ -259,7 +259,8 @@ def plotPathToCurrentDroneStateLive(droneState: "DroneState",
 
         dronePatch = Circle((h.x, h.y), 0.45, color="red", zorder=50)
         ax.add_patch(dronePatch)
-        ax.annotate("0m/s", (h.x, h.y + 0.35),
+        ax.annotate(f"{round(planner.sf.velocitiesWithinZone[0], 2)} m/s",
+                    (h.x, h.y + 0.35),
                     color='w',
                     weight='bold',
                     ha='center',
@@ -269,7 +270,8 @@ def plotPathToCurrentDroneStateLive(droneState: "DroneState",
 
         dronePatch = Circle(((h.x, h.y)), 1.2, color="orange", zorder=40)
         ax.add_patch(dronePatch)
-        ax.annotate("0.75m/s", (h.x, h.y + 1.1),
+        ax.annotate(f"{round(planner.sf.velocitiesWithinZone[1], 2)} m/s",
+                    (h.x, h.y + 1.1),
                     color='w',
                     weight='bold',
                     ha='center',
@@ -279,7 +281,8 @@ def plotPathToCurrentDroneStateLive(droneState: "DroneState",
 
         dronePatch = Circle((h.x, h.y), 3.6, color="pink", zorder=30)
         ax.add_patch(dronePatch)
-        ax.annotate("1.5m/s", (h.x, h.y + 1.5),
+        ax.annotate(f"{round(planner.sf.velocitiesWithinZone[2], 2)} m/s",
+                    (h.x, h.y + 1.5),
                     color='w',
                     weight='bold',
                     ha='center',
@@ -289,7 +292,8 @@ def plotPathToCurrentDroneStateLive(droneState: "DroneState",
 
         dronePatch = Circle((h.x, h.y), 7.6, color="purple", zorder=20)
         ax.add_patch(dronePatch)
-        ax.annotate("1.5m/s", (h.x, h.y),
+        ax.annotate(f"{round(planner.sf.velocitiesWithinZone[3], 2)} m/s",
+                    (h.x, h.y),
                     color='w',
                     weight='bold',
                     ha='center',

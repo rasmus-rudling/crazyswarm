@@ -6,6 +6,11 @@ import sys
 sys.path.append(
     '/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts')
 
+sys.path.append(
+    '/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
+)
+
+from globalVariables import HEIGHT_OFFSET, PATH_TO_ROOT
 from matplotlib import pyplot as plt
 import numpy as np
 from SimpleTrajectory import SimpleTrajectory
@@ -198,7 +203,7 @@ class CrazyflieController:
 
         goalX = goalPose.x - 0.16
         goalY = goalPose.y + 0.05
-        goalZ = goalPose.z - 0.01
+        goalZ = goalPose.z + 0.05
 
         goalPosition = np.array([goalX, goalY, goalZ])
         distanceToGoalPosition = np.linalg.norm(currentPosition - goalPosition)
@@ -227,6 +232,21 @@ class CrazyflieController:
 
         # "Simple" trajectory to not confuse with the trajectory created by the motion planner
         return SimpleTrajectory(timesteps, x, y, z, yaw)
+
+    def executeStandardTrajectory(self, simpleTrajectory):
+        startPose = Pose(simpleTrajectory.x[0], simpleTrajectory.y[0],
+                         simpleTrajectory.z[0], simpleTrajectory.yaw[0])
+
+        trajectoryToStartPose = self.getTrajectoryToPose(goalPose=startPose,
+                                                         velocity=0.5)
+
+        recordedTrajectoryToStartPose = self.followTrajectory(
+            trajectoryToStartPose)
+
+        self.hover(duration=2)
+        recordingOfPlannedTrajectory = self.followTrajectory(simpleTrajectory)
+        self.hover(duration=2)
+        self.land(velocity=0.5)
 
 
 def flight1(droneController: "CrazyflieController"):
@@ -326,9 +346,9 @@ def flight5(droneController: "CrazyflieController"):
 
 
 def flight6(droneController: "CrazyflieController"):
-    pathToTrajectoryFolder = f"savedTrajectories/sf3/Round #0 - 2022-06-09 22:19:23 | eps=0.64 a_max=0.96 | D=234  | Final trajectory"
-    csvFilePath = f"{pathToTrajectoryFolder}/trajectoryData.csv"
-    plannedTrajectory = SimpleTrajectory(csv=csvFilePath)
+    # csvFilePath = f"{PATH_TO_ROOT}/mainStudy/participants/{0}/savedTrajectories/SF3/trajectoryData.csv"
+    csvFilePath = f"{PATH_TO_ROOT}/savedTrajectories/2022-06-15 17:34:15 | Heuristic | D=133  | Final trajectory/trajectoryData.csv"
+    plannedTrajectory = SimpleTrajectory(csv=csvFilePath, z_height=Z_HEIGHT)
 
     goalPose = Pose(plannedTrajectory.x[0], plannedTrajectory.y[0], Z_HEIGHT,
                     plannedTrajectory.yaw[0])
@@ -343,9 +363,6 @@ def flight6(droneController: "CrazyflieController"):
     droneController.hover(3.5)
 
     droneController.land(0.5)
-    plannedTrajectory.plotTrajectory(
-        otherTrajectory=recordedTrajectory,
-        fileName=f"{pathToTrajectoryFolder}/executedTrajectory")
 
 
 if __name__ == "__main__":

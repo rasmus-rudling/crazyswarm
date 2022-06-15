@@ -6,7 +6,7 @@ sys.path.append(
 )
 
 from Participant import Participant
-from globalVariables import DRONE_START_X, DRONE_START_Y, GOAL_OFFSET_X, GOAL_OFFSET_Y, PATH_TO_ROOT, POSSIBLE_ACCELERATIONS
+from globalVariables import DRONE_START_X, DRONE_START_Y, GOAL_OFFSET_X, GOAL_OFFSET_Y, HEIGHT_OFFSET, PATH_TO_ROOT, POSSIBLE_ACCELERATIONS
 from helpers import userInput
 
 import numpy as np
@@ -342,10 +342,10 @@ class GaussianProcess:
         recordingsOfPlannedTrajectories = []
 
         for i, trajectoryKey in enumerate(trajectoryKeys):
-            offset = 50
             try:
                 currentPathToTrajectoryFolder = f"savedTrajectories/{trajectoryKey}"
-                z_height = (self.currentParticipant.height - offset) / 100
+                z_height = (self.currentParticipant.height -
+                            HEIGHT_OFFSET) / 100
 
                 currentPlannedTrajectory = SimpleTrajectory(
                     csv=f"{currentPathToTrajectoryFolder}/trajectoryData.csv",
@@ -353,7 +353,8 @@ class GaussianProcess:
             except:
                 try:
                     currentPathToTrajectoryFolder = f"{PATH_TO_ROOT}/preStudy/{trajectoryKey}"
-                    z_height = (self.currentParticipant.height - offset) / 100
+                    z_height = (self.currentParticipant.height -
+                                HEIGHT_OFFSET) / 100
 
                     currentPlannedTrajectory = SimpleTrajectory(
                         csv=
@@ -361,7 +362,8 @@ class GaussianProcess:
                         z_height=z_height)
                 except:
                     currentPathToTrajectoryFolder = f"{PATH_TO_ROOT}/mainStudy/participants/{trajectoryKey}"
-                    z_height = (self.currentParticipant.height - offset) / 100
+                    z_height = (self.currentParticipant.height -
+                                HEIGHT_OFFSET) / 100
 
                     currentPlannedTrajectory = SimpleTrajectory(
                         csv=

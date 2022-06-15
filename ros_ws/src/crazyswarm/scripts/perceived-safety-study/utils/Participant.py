@@ -37,8 +37,6 @@ def balancedLatinSquare(array, participantId):
     return result
 
 
-conditions = [1, 2, 3, 1, 2, 3, 1, 2, 3]
-
 PREVIOUS_DRONE_EXPERIENCE = {
     "1": "Yes, I've controlled at least one drone myself",
     "2": "Yes, I've seen at least one other person control a drone in person",
@@ -52,7 +50,7 @@ class Participant:
     CSV_PATH = f"{PATH_TO_ROOT}/utils/participants.csv"
 
     def __init__(self, id, firstName, lastName, gender, height,
-                 previousDroneExperience, email, sfOrder):
+                 previousDroneExperience, email, sfOrder, evaluation):
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
@@ -61,36 +59,66 @@ class Participant:
         self.previousDroneExperience = previousDroneExperience
         self.email = email
         self.sfOrder = sfOrder
+        self.evaluation = evaluation
 
     def save(self):
         allParticipants = Participant.getAllParticipants()
 
         user = Participant.getParticipantById(id=self.id)
 
-        addUser = user is None
+        updateUser = user is not None
 
-        if addUser:
+        if updateUser:
+            updatedParticipants = []
+
+            for p in allParticipants:
+                if p.id == self.id:
+                    updatedParticipants.append(self)
+                else:
+                    updatedParticipants.append(p)
+
+            allParticipants = updatedParticipants
+        else:
             allParticipants.append(self)
 
-            with open(Participant.CSV_PATH, 'w', encoding='UTF8') as f:
-                writer = csv.writer(f)
+        with open(Participant.CSV_PATH, 'w', encoding='UTF8') as f:
+            writer = csv.writer(f)
 
-                header = [
-                    "id", "firstName", "lastName", "gender", "height",
-                    "previousDroneExperience", "email", "sfOrder"
-                ]
-                writer.writerow(header)
+            header = [
+                "id", "firstName", "lastName", "gender", "height",
+                "previousDroneExperience", "email", "sfOrder", "evaluation"
+            ]
+            writer.writerow(header)
 
-                for participant in allParticipants:
-                    writer.writerow([
-                        participant.id, participant.firstName,
-                        participant.lastName, participant.gender,
-                        participant.height,
-                        str(participant.previousDroneExperience),
-                        participant.email, participant.sfOrder
-                    ])
+            for participant in allParticipants:
+                writer.writerow([
+                    participant.id, participant.firstName,
+                    participant.lastName, participant.gender,
+                    participant.height,
+                    str(participant.previousDroneExperience),
+                    participant.email, participant.sfOrder,
+                    participant.evaluation
+                ])
 
-        return addUser
+        return updateUser
+
+    def getNextTrajectoryToEvaluate(self):
+        prevEvaluations = self.evaluation.split("|")
+        sfIdx = 0 if prevEvaluations[0] == "" else len(prevEvaluations)
+
+        safetyFunctions = self.sfOrder.split("|")
+
+        if sfIdx >= len(safetyFunctions):
+            print("Nothing left to evaluate")
+            return None
+
+        return safetyFunctions[sfIdx]
+
+    def addEvaluation(self):
+        evaluation = userInput("Evaluation: ", int)
+
+        self.evaluation += f"|{evaluation}" if self.evaluation != "" else f"{evaluation}"
+        self.save()
 
     @staticmethod
     def getIdForNewUser():
@@ -117,7 +145,8 @@ class Participant:
                                     height=int(participantData[4]),
                                     previousDroneExperience=participantData[5],
                                     email=participantData[6],
-                                    sfOrder=participantData[7])
+                                    sfOrder=participantData[7],
+                                    evaluation=participantData[8])
 
                     participants.append(p)
 
@@ -174,7 +203,24 @@ class Participant:
 
         shuffle(safetyFunctions)
 
-        return "-".join(safetyFunctions)
+        return "|".join(safetyFunctions)
+
+    @staticmethod
+    def getLatinSquareSFOrder(pID):
+        conditions = [
+            "1",
+            "2",
+            "3",
+            "1",
+            "2",
+            "3",
+            "1",
+            "2",
+            "3",
+        ]
+        safetyFunctions = balancedLatinSquare(conditions, pID)
+
+        return "|".join(safetyFunctions)
 
     @classmethod
     def fromTerminalInput(cls: "Participant"):
@@ -203,7 +249,8 @@ class Participant:
                              height=height,
                              previousDroneExperience=previousDroneExperience,
                              email=email,
-                             sfOrder=Participant.getRandomSFOrder())
+                             sfOrder=Participant.getLatinSquareSFOrder(id),
+                             evaluation="")
 
         return newParticipant
 

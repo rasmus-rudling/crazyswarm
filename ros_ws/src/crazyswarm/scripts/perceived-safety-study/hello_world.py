@@ -3,8 +3,16 @@ import sys
 sys.path.append("..")
 from pycrazyswarm import Crazyswarm
 
+
 def main():
-    crazyflies_yaml = str({'crazyflies': [{'channel': 100, 'id': 7, 'initialPosition': [0.0, 0.0, 0.0], 'type': 'default'}]})
+    crazyflies_yaml = str({
+        'crazyflies': [{
+            'channel': 100,
+            'id': 7,
+            'initialPosition': [0.0, 0.0, 0.0],
+            'type': 'default'
+        }]
+    })
     swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml)
     timeHelper = swarm.timeHelper
 
@@ -17,7 +25,6 @@ def main():
 
     drone.land(targetHeight=0.07, duration=duration)
     timeHelper.sleep(duration)
-
 
 
 if __name__ == "__main__":

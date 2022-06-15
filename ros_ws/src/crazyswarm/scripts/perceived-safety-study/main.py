@@ -24,6 +24,8 @@ def main():
     # sf = CBF(1.0, 0.1)  # Fastest
     # sf = CBF(0.1, 0.7)  # Slowest
 
+    sf = HeuristicSafetyFunction()
+
     planner = Planner(
         verboseLevel=3,
         sf=sf,

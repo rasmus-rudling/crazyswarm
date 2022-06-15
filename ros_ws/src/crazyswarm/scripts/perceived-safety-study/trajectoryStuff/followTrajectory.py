@@ -21,18 +21,25 @@ HUMAN_RADIUS = 0.5
 DRONE_RADIUS = 0.2
 MIN_ALLOWED_DISTANCE_TO_HUMAN = 0.45
 
-def getMaxVelocity(dronePos):
-  x, y, _ = dronePos
-  distanceToHuman = euclidianDistance(x, y, 0, 0)
-  maxAllowedVelocity = heuristicFunction(distanceToHuman)
 
-  return maxAllowedVelocity
+def getMaxVelocity(dronePos):
+    x, y, _ = dronePos
+    distanceToHuman = euclidianDistance(x, y, 0, 0)
+    maxAllowedVelocity = heuristicFunction(distanceToHuman)
+
+    return maxAllowedVelocity
+
 
 def getSleepTime(velocity, tentacleLength):
-  return tentacleLength / velocity
+    return tentacleLength / velocity
 
 
-def executeCustomTrajectory(timeHelper, drone, rate=100, trajectoryLogger=None, trajectoryToFollow=None, droneHeight=2):
+def executeCustomTrajectory(timeHelper,
+                            drone,
+                            rate=100,
+                            trajectoryLogger=None,
+                            trajectoryToFollow=None,
+                            droneHeight=2):
     num_timestamps = len(trajectoryToFollow.timestamps)
 
     for event_idx in range(num_timestamps):
@@ -46,13 +53,11 @@ def executeCustomTrajectory(timeHelper, drone, rate=100, trajectoryLogger=None, 
 
         currentTimestamp = trajectoryToFollow.timestamps[event_idx]
 
-        drone.cmdFullState(
-          pos=currentPosition,
-          vel=currentVelocity,
-          acc=currentAcceleration,
-          yaw=currentYaw % (2 * np.pi),
-          omega=currentOmega
-        )
+        drone.cmdFullState(pos=currentPosition,
+                           vel=currentVelocity,
+                           acc=currentAcceleration,
+                           yaw=currentYaw % (2 * np.pi),
+                           omega=currentOmega)
 
         # timeHelper.sleepForRate(rate)
         v = getMaxVelocity(currentPosition)
@@ -60,7 +65,7 @@ def executeCustomTrajectory(timeHelper, drone, rate=100, trajectoryLogger=None, 
 
         timeHelper.sleep(sleepTime)
         trajectoryLogger.appendDroneEvent(currentTimestamp, drone)
-        
+
 
 if __name__ == "__main__":
     trajectoryToFollow = TrajectoryUtils("csvs/PathPlanningTrajectory.csv")
@@ -71,8 +76,16 @@ if __name__ == "__main__":
 
     obstacleRadius = obstacleToPlot.radius - DRONE_RADIUS
 
-    crazyflies_yaml = str({'crazyflies': [{'channel': 100, 'id': 7, 'initialPosition': [startX, startY, startYaw], 'type': 'default'}]})
-    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, obstacleRadius=obstacleRadius)
+    crazyflies_yaml = str({
+        'crazyflies': [{
+            'channel': 100,
+            'id': 7,
+            'initialPosition': [startX, startY, startYaw],
+            'type': 'default'
+        }]
+    })
+    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml,
+                       obstacleRadius=obstacleRadius)
     timeHelper = swarm.timeHelper
     drone = swarm.allcfs.crazyflies[0]
 
@@ -83,13 +96,14 @@ if __name__ == "__main__":
     drone.takeoff(targetHeight=droneHeight, duration=2)
     timeHelper.sleep(2)
 
-    rate = 15 # In Hz
+    rate = 15  # In Hz
     trajectoryLogger = TrajectoryUtils()
 
-    executeCustomTrajectory(timeHelper, drone, rate, trajectoryLogger, trajectoryToFollow, droneHeight)
+    executeCustomTrajectory(timeHelper, drone, rate, trajectoryLogger,
+                            trajectoryToFollow, droneHeight)
 
     trajectoryLogger.saveTrajectoryToCsv('csvs/loggedLatticeTrajectory.csv')
-  # trajectoryLogger.compareWithOtherTrajectory(trajectoryToFollow)
+    # trajectoryLogger.compareWithOtherTrajectory(trajectoryToFollow)
 
     print("Follower done!")
 
@@ -97,5 +111,3 @@ if __name__ == "__main__":
     drone.land(targetHeight=0.03, duration=0.5)
     timeHelper.sleep(0.5)
     plt.close()
-
-    

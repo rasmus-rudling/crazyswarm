@@ -13,9 +13,11 @@ sys.path.append(
 )
 
 from drone import DroneState
+from crazyflieController import CrazyflieController
+from SimpleTrajectory import SimpleTrajectory
 from motionPlanner import recordFinalTrajectory
 from trajectory import Trajectory
-from globalVariables import DRONE_START_X, DRONE_START_Y, GOAL_OFFSET_X, GOAL_OFFSET_Y
+from globalVariables import DRONE_START_X, DRONE_START_Y, GOAL_OFFSET_X, GOAL_OFFSET_Y, HEIGHT_OFFSET
 from drone import DroneGoalState
 from motionPlanner import Planner
 from cbFunctions import CBF, HeuristicSafetyFunction
@@ -55,7 +57,11 @@ def getSf3(participantId):
 
 
 def calcSF1():
-    planner = Planner(verboseLevel=3, sf=HeuristicSafetyFunction())
+    sf2 = getSf2()
+
+    sf3 = HeuristicSafetyFunction(cbf=sf2)
+
+    planner = Planner(verboseLevel=3, sf=sf3)
 
     currentDroneState = DroneState(parent=None,
                                    x=initDroneState.x,
@@ -83,7 +89,7 @@ def calcSF1():
         except:
             pass
 
-        recordFinalTrajectory(finalDroneState, planner)
+        # recordFinalTrajectory(finalDroneState, planner)
 
 
 def calcSF2():
@@ -115,12 +121,13 @@ def calcSF2():
         except:
             pass
 
-        recordFinalTrajectory(finalDroneState, planner)
+        # recordFinalTrajectory(finalDroneState, planner)
 
 
 def calcSF3():
-    p = Participant.getParticipant()
-    planner = Planner(verboseLevel=3, sf=getSf3(p.id))
+    participantId = int(sys.argv[2])
+
+    planner = Planner(verboseLevel=3, sf=getSf3(participantId))
 
     currentDroneState = DroneState(parent=None,
                                    x=initDroneState.x,
@@ -134,7 +141,7 @@ def calcSF3():
     if foundGoalState:
         print("Found goal :)")
 
-        planner.animationKey = f"{p.id}/savedTrajectories/SF3"
+        planner.animationKey = f"{participantId}/savedTrajectories/SF3"
         filePath = f"{PATH_TO_ROOT}/mainStudy/participants/{planner.animationKey}"
 
         try:
@@ -184,8 +191,34 @@ def stage1():
 
 def stage2():
     """ Test safety functions """
-    # TODO: implement
-    pass
+    pID = int(sys.argv[2])
+
+    p = Participant.getParticipantById(pID)
+
+    z_height = (p.height - HEIGHT_OFFSET) / 100
+
+    trajectories = {
+        "1":
+        SimpleTrajectory(
+            csv=f"{PATH_TO_ROOT}/mainStudy/SF1/trajectoryData.csv",
+            z_height=z_height),
+        "2":
+        SimpleTrajectory(
+            csv=f"{PATH_TO_ROOT}/mainStudy/SF2/trajectoryData.csv",
+            z_height=z_height),
+        "3":
+        SimpleTrajectory(
+            csv=
+            f"{PATH_TO_ROOT}/mainStudy/participants/{pID}/savedTrajectories/SF3/trajectoryData.csv",
+            z_height=z_height)
+    }
+
+    safetyFunctionKey = p.getNextTrajectoryToEvaluate()
+    trajectoryToEvaluate = trajectories[safetyFunctionKey]
+
+    droneController = CrazyflieController()
+    droneController.executeStandardTrajectory(trajectoryToEvaluate)
+    p.addEvaluation()
 
 
 def plotSafetyFunction():

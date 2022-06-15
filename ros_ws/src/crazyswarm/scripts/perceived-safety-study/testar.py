@@ -1,9 +1,7 @@
-from random import shuffle
+a = ""
+b = "1"
+c = "1|2|3"
 
-
-a = [1, 2, 3, 4, 5, 6, 7]
-
-shuffle(a)
-
-print(a)
-
+print(a.split("|"))
+print(b.split("|"))
+print(c.split("|"))

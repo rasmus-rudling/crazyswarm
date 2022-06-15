@@ -56,11 +56,21 @@ class CBF:
 
 
 class HeuristicSafetyFunction:
-    def __init__(self):
+    def __init__(self, cbf: "CBF" = None):
         self.name = "heuristic"
-
         self.zoneLimits = np.array([0.45, 1.2, 3.6, 7.6])
-        self.velocitiesWithinZone = np.array([0, 0.75, 1.5, 1.5])
+
+        if cbf is None:
+            # self.velocitiesWithinZone = np.array([0, 0.75, 1.5, 1.5])
+            cbf = CBF(0.1, 0.1)
+
+        maxVelocities = [0]
+
+        for d in self.zoneLimits:
+            maxV = cbf.maxVelocityForCurrentDistance(d)
+            maxVelocities.append(maxV)
+
+        self.velocitiesWithinZone = np.array(maxVelocities[:-1])
         self.zones = {}
 
         for i, zoneLimit in enumerate(self.zoneLimits):
@@ -106,6 +116,15 @@ class HeuristicSafetyFunction:
 
         return distance >= (minDistance +
                             droneRadius)**2 and velocity <= DRONE_MAX_VELOCITY
+
+    def plot(self):
+        distances = np.arange(0, 3, 0.02)
+        v = np.array(
+            [self.maxVelocityForCurrentDistance(d) for d in distances])
+
+        plt.plot(distances, v)
+        plt.show()
+        plt.pause(9999)
 
 
 def plotVelocities():

@@ -7,7 +7,6 @@ from followTrajectory import executeCustomTrajectory
 from pycrazyswarm import Crazyswarm
 sys.path.append("..")
 
-
 MOCAP_ROOM_HEIGHT = 2.57
 MOCAP_ROOM_LENGTH = 4.5
 MOCAP_ROOM_WIDTH = 3.55
@@ -48,7 +47,8 @@ def main():
     haveInitialized = False
 
     for trajectoryIdx in range(numTrajectories):
-        obstacleRadius = (HUMAN_RADIUS + DRONE_RADIUS + MIN_ALLOWED_DISTANCE_TO_HUMAN)
+        obstacleRadius = (HUMAN_RADIUS + DRONE_RADIUS +
+                          MIN_ALLOWED_DISTANCE_TO_HUMAN)
 
         latticePaths, tentacleLength = getLatticePaths()
 
@@ -57,45 +57,55 @@ def main():
         # print(f"Current (x,y)=({currentState.x}, {currentState.y})")
 
         trajectoryPlanner = TrajectoryPlanner(
-          latticePaths=latticePaths,
-          obstacle=obstacle,
-          dt=0.1, 
-          startYaw=currentState.yaw, 
-          startX=currentState.x, 
-          startY=currentState.y, 
-          goalX=destinationState.x, 
-          goalY=destinationState.y,
+            latticePaths=latticePaths,
+            obstacle=obstacle,
+            dt=0.1,
+            startYaw=currentState.yaw,
+            startX=currentState.x,
+            startY=currentState.y,
+            goalX=destinationState.x,
+            goalY=destinationState.y,
         )
 
         trajectoryToGoal = trajectoryPlanner.findPathToGoal()
 
         trajectoryToGoal.saveTrajectoryToCsv("csvs/PathPlanningTrajectory.csv")
-        trajectoryToFollow = TrajectoryUtils("csvs/PathPlanningTrajectory.csv", tentacleLength=tentacleLength)
-
+        trajectoryToFollow = TrajectoryUtils("csvs/PathPlanningTrajectory.csv",
+                                             tentacleLength=tentacleLength)
 
         if not haveInitialized:
-          startX = trajectoryToFollow.positions[0][0]
-          startY = trajectoryToFollow.positions[0][1]
-          startYaw = trajectoryToFollow.yaws[0]
+            startX = trajectoryToFollow.positions[0][0]
+            startY = trajectoryToFollow.positions[0][1]
+            startYaw = trajectoryToFollow.yaws[0]
 
-          obstacleRadius = obstacle.radius - DRONE_RADIUS
+            obstacleRadius = obstacle.radius - DRONE_RADIUS
 
-          crazyflies_yaml = str({'crazyflies': [{'channel': 100, 'id': 7, 'initialPosition': [startX, startY, startYaw], 'type': 'default'}]})
-          swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, obstacleRadius=obstacleRadius)
-          timeHelper = swarm.timeHelper
-          drone = swarm.allcfs.crazyflies[0]
-          plt.gca().view_init(elev=-90, azim=-90)
-          
-          haveInitialized = True
+            crazyflies_yaml = str({
+                'crazyflies': [{
+                    'channel': 100,
+                    'id': 7,
+                    'initialPosition': [startX, startY, startYaw],
+                    'type': 'default'
+                }]
+            })
+            swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml,
+                               obstacleRadius=obstacleRadius)
+            timeHelper = swarm.timeHelper
+            drone = swarm.allcfs.crazyflies[0]
+            plt.gca().view_init(elev=-90, azim=-90)
 
-          drone.takeoff(targetHeight=DRONE_HEIGHT, duration=2)
-          timeHelper.sleep(2)
+            haveInitialized = True
 
-        rate = 15 # In Hz
+            drone.takeoff(targetHeight=DRONE_HEIGHT, duration=2)
+            timeHelper.sleep(2)
+
+        rate = 15  # In Hz
         trajectoryLogger = TrajectoryUtils()
 
-        executeCustomTrajectory(timeHelper, drone, rate, trajectoryLogger, trajectoryToFollow, DRONE_HEIGHT)
-        trajectoryLogger.saveTrajectoryToCsv(f'csvs/loggedLatticeTrajectory{trajectoryIdx}.csv')
+        executeCustomTrajectory(timeHelper, drone, rate, trajectoryLogger,
+                                trajectoryToFollow, DRONE_HEIGHT)
+        trajectoryLogger.saveTrajectoryToCsv(
+            f'csvs/loggedLatticeTrajectory{trajectoryIdx}.csv')
 
         print("Follower done!")
 
