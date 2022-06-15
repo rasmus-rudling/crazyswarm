@@ -4,7 +4,7 @@ if __name__ == "__main__":
 import sys
 
 sys.path.append(
-    '/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
+    '/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
 )
 
 import functools

@@ -2,7 +2,7 @@ from itertools import product
 import sys
 
 sys.path.append(
-    '/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
+    '/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
 )
 
 from Participant import Participant
@@ -225,7 +225,6 @@ class GaussianProcess:
         plt.show()
 
     def getperceivedSafety(self):
-
         def approvedRating(rating):
             return -MAX_INPUT_VAL <= rating and rating <= MAX_INPUT_VAL
 
@@ -343,11 +342,21 @@ class GaussianProcess:
         recordingsOfPlannedTrajectories = []
 
         for i, trajectoryKey in enumerate(trajectoryKeys):
-            currentPathToTrajectoryFolder = f"savedTrajectories/{trajectoryKey}"
-            z_height = (self.currentParticipant.height - 50) / 100
-            currentPlannedTrajectory = SimpleTrajectory(
-                csv=f"{currentPathToTrajectoryFolder}/trajectoryData.csv",
-                z_height=z_height)
+            try:
+                currentPathToTrajectoryFolder = f"savedTrajectories/{trajectoryKey}"
+                z_height = (self.currentParticipant.height - 50) / 100
+
+                currentPlannedTrajectory = SimpleTrajectory(
+                    csv=f"{currentPathToTrajectoryFolder}/trajectoryData.csv",
+                    z_height=z_height)
+            except:
+                currentPathToTrajectoryFolder = f"{PATH_TO_ROOT}/preStudy/{trajectoryKey}"
+                z_height = (self.currentParticipant.height - 50) / 100
+
+                currentPlannedTrajectory = SimpleTrajectory(
+                    csv=f"{currentPathToTrajectoryFolder}/trajectoryData.csv",
+                    z_height=z_height)
+
             currentStartPose = Pose(currentPlannedTrajectory.x[0],
                                     currentPlannedTrajectory.y[0],
                                     currentPlannedTrajectory.z[0],

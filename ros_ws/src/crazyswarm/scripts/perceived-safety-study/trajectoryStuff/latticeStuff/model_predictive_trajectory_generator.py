@@ -23,46 +23,59 @@ cost_th = 0.1
 show_animation = True
 
 
-def plot_arrow(x, y, yaw, length=1.0, width=0.5, fc="r", ec="k"):  # pragma: no cover
+def plot_arrow(x,
+               y,
+               yaw,
+               length=1.0,
+               width=0.5,
+               fc="r",
+               ec="k"):  # pragma: no cover
     """
     Plot arrow
     """
-    plt.arrow(x, y, length * math.cos(yaw), length * math.sin(yaw),
-              fc=fc, ec=ec, head_width=width, head_length=width)
+    plt.arrow(x,
+              y,
+              length * math.cos(yaw),
+              length * math.sin(yaw),
+              fc=fc,
+              ec=ec,
+              head_width=width,
+              head_length=width)
     plt.plot(x, y)
     plt.plot(0, 0)
 
 
 def calc_diff(target, x, y, yaw):
-    d = np.array([target.x - x[-1],
-                  target.y - y[-1],
-                  motion_model.pi_2_pi(target.yaw - yaw[-1])])
+    d = np.array([
+        target.x - x[-1], target.y - y[-1],
+        motion_model.pi_2_pi(target.yaw - yaw[-1])
+    ])
 
     return d
 
 
 def calc_j(target, p, h, k0):
-    xp, yp, yawp = motion_model.generate_last_state(
-        p[0, 0] + h[0], p[1, 0], p[2, 0], k0)
+    xp, yp, yawp = motion_model.generate_last_state(p[0, 0] + h[0], p[1, 0],
+                                                    p[2, 0], k0)
     dp = calc_diff(target, [xp], [yp], [yawp])
-    xn, yn, yawn = motion_model.generate_last_state(
-        p[0, 0] - h[0], p[1, 0], p[2, 0], k0)
+    xn, yn, yawn = motion_model.generate_last_state(p[0, 0] - h[0], p[1, 0],
+                                                    p[2, 0], k0)
     dn = calc_diff(target, [xn], [yn], [yawn])
     d1 = np.array((dp - dn) / (2.0 * h[0])).reshape(3, 1)
 
-    xp, yp, yawp = motion_model.generate_last_state(
-        p[0, 0], p[1, 0] + h[1], p[2, 0], k0)
+    xp, yp, yawp = motion_model.generate_last_state(p[0, 0], p[1, 0] + h[1],
+                                                    p[2, 0], k0)
     dp = calc_diff(target, [xp], [yp], [yawp])
-    xn, yn, yawn = motion_model.generate_last_state(
-        p[0, 0], p[1, 0] - h[1], p[2, 0], k0)
+    xn, yn, yawn = motion_model.generate_last_state(p[0, 0], p[1, 0] - h[1],
+                                                    p[2, 0], k0)
     dn = calc_diff(target, [xn], [yn], [yawn])
     d2 = np.array((dp - dn) / (2.0 * h[1])).reshape(3, 1)
 
-    xp, yp, yawp = motion_model.generate_last_state(
-        p[0, 0], p[1, 0], p[2, 0] + h[2], k0)
+    xp, yp, yawp = motion_model.generate_last_state(p[0, 0], p[1, 0],
+                                                    p[2, 0] + h[2], k0)
     dp = calc_diff(target, [xp], [yp], [yawp])
-    xn, yn, yawn = motion_model.generate_last_state(
-        p[0, 0], p[1, 0], p[2, 0] - h[2], k0)
+    xn, yn, yawn = motion_model.generate_last_state(p[0, 0], p[1, 0],
+                                                    p[2, 0] - h[2], k0)
     dn = calc_diff(target, [xn], [yn], [yawn])
     d3 = np.array((dp - dn) / (2.0 * h[2])).reshape(3, 1)
 
@@ -107,7 +120,10 @@ def optimize_trajectory(target, k0, p):
     dt = None
 
     for i in range(max_iter):
-        xc, yc, yawc, dt = motion_model.generate_trajectory(s=p[0], km=p[1], kf=p[2], k0=k0)
+        xc, yc, yawc, dt = motion_model.generate_trajectory(s=p[0],
+                                                            km=p[1],
+                                                            kf=p[2],
+                                                            k0=k0)
         dc = np.array(calc_diff(target, xc, yc, yawc)).reshape(3, 1)
 
         cost = np.linalg.norm(dc)
@@ -117,7 +133,7 @@ def optimize_trajectory(target, k0, p):
 
         J = calc_j(target, p, h, k0)
         try:
-            dp = - np.linalg.inv(J) @ dc
+            dp = -np.linalg.inv(J) @ dc
         except np.linalg.linalg.LinAlgError:
             print("cannot calc path LinAlgError")
             xc, yc, yawc, p = None, None, None, None
@@ -151,18 +167,15 @@ def test_optimize_trajectory():  # pragma: no cover
     path_planner_trajectory = TrajectoryUtils()
 
     for event_idx in range(num_events):
-      timestamp = event_idx * dt
+        timestamp = event_idx * dt
 
-      x_curr = x[event_idx]
-      y_curr = y[event_idx]
-      pos_curr = np.array([x_curr, y_curr, -1])
+        x_curr = x[event_idx]
+        y_curr = y[event_idx]
+        pos_curr = np.array([x_curr, y_curr, -1])
 
-      path_planner_trajectory.appendEvent(timestamp, pos_curr)
+        path_planner_trajectory.appendEvent(timestamp, pos_curr)
 
     path_planner_trajectory.saveTrajectoryToCsv("latticepath.csv")
-
-    print(x)
-    print(p)
 
     if show_animation:
         show_trajectory(target, x, y)

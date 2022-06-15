@@ -3,13 +3,13 @@ import sys
 import os
 
 sys.path.append(
-    f'/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study'
+    f'/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study'
 )
 sys.path.append(
-    '/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
+    '/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
 )
 sys.path.append(
-    '/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/planner'
+    '/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study/planner'
 )
 
 from drone import DroneState
@@ -156,25 +156,28 @@ def calcSF3():
 
 def stage1():
     """ Create SF3.PID """
-    p = Participant.getParticipant()
+    participantId = int(sys.argv[2])
 
     try:
-        os.mkdir(f"{PATH_TO_ROOT}/mainStudy/participants/{p.id}")
+        os.mkdir(f"{PATH_TO_ROOT}/mainStudy/participants/{participantId}")
     except:
         pass
 
     try:
         os.mkdir(
-            f"{PATH_TO_ROOT}/mainStudy/participants/{p.id}/savedTrajectories")
+            f"{PATH_TO_ROOT}/mainStudy/participants/{participantId}/savedTrajectories"
+        )
     except:
         pass
 
     gp = GaussianProcess(
-        pID=p.id,
-        safetyFunction=f"sf3.{p.id}",
-        csvFileName=f"participants/{p.id}/sf3.{p.id} - input.csv",
+        pID=participantId,
+        safetyFunction=f"sf3.{participantId}",
+        csvFileName=
+        f"participants/{participantId}/sf3.{participantId} - input.csv",
         savedTrajectoriesDir=
-        f"{PATH_TO_ROOT}/mainStudy/participants/{p.id}/savedTrajectories")
+        f"{PATH_TO_ROOT}/mainStudy/participants/{participantId}/savedTrajectories"
+    )
 
     gp.startProcess()
 

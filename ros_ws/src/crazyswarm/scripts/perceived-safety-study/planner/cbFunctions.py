@@ -6,10 +6,10 @@ import numpy as np
 import sys
 
 sys.path.append(
-    '/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/planner'
+    '/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study/planner'
 )
 sys.path.append(
-    '/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
+    '/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
 )
 
 from globalVariables import DRONE_MAX_VELOCITY
@@ -56,7 +56,6 @@ class CBF:
 
 
 class HeuristicSafetyFunction:
-
     def __init__(self):
         self.name = "heuristic"
 

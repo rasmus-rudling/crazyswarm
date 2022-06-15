@@ -177,7 +177,6 @@ class Planner:
             self,
             associatedDroneState: "DroneState",
             multiThread=False) -> Tuple[bool, "Movement"]:
-
         def addNewMovement(angle, acceleration, info):
             newMovement = Movement(angle=angle,
                                    acceleration=acceleration,
@@ -330,7 +329,6 @@ class Planner:
 def makeAnimationFromTrajectory(planner: "Planner",
                                 dt: float = None,
                                 lastFrameDuration: int = 5000):
-
     def getImageNum(imageName: str) -> int:
         return int(imageName.split("/")[-1][:-4])
 

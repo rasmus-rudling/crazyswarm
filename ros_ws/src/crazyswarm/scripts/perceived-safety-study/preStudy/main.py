@@ -1,11 +1,20 @@
 import sys
 
+# sys.path.append(
+#     '/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study'
+# )
+# sys.path.append(
+#     '/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
+# )
+
 sys.path.append(
-    '/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study'
+    "/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study"
 )
+
 sys.path.append(
-    '/Users/rr/Documents/thesis/degree-thesis/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
+    "/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils"
 )
+
 from globalVariables import NUM_TRAJECTORIES_TO_TUNE_CBF
 
 from Participant import Participant
