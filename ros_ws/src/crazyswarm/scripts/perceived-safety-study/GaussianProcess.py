@@ -342,20 +342,31 @@ class GaussianProcess:
         recordingsOfPlannedTrajectories = []
 
         for i, trajectoryKey in enumerate(trajectoryKeys):
+            offset = 50
             try:
                 currentPathToTrajectoryFolder = f"savedTrajectories/{trajectoryKey}"
-                z_height = (self.currentParticipant.height - 50) / 100
+                z_height = (self.currentParticipant.height - offset) / 100
 
                 currentPlannedTrajectory = SimpleTrajectory(
                     csv=f"{currentPathToTrajectoryFolder}/trajectoryData.csv",
                     z_height=z_height)
             except:
-                currentPathToTrajectoryFolder = f"{PATH_TO_ROOT}/preStudy/{trajectoryKey}"
-                z_height = (self.currentParticipant.height - 50) / 100
+                try:
+                    currentPathToTrajectoryFolder = f"{PATH_TO_ROOT}/preStudy/{trajectoryKey}"
+                    z_height = (self.currentParticipant.height - offset) / 100
 
-                currentPlannedTrajectory = SimpleTrajectory(
-                    csv=f"{currentPathToTrajectoryFolder}/trajectoryData.csv",
-                    z_height=z_height)
+                    currentPlannedTrajectory = SimpleTrajectory(
+                        csv=
+                        f"{currentPathToTrajectoryFolder}/trajectoryData.csv",
+                        z_height=z_height)
+                except:
+                    currentPathToTrajectoryFolder = f"{PATH_TO_ROOT}/mainStudy/participants/{trajectoryKey}"
+                    z_height = (self.currentParticipant.height - offset) / 100
+
+                    currentPlannedTrajectory = SimpleTrajectory(
+                        csv=
+                        f"{currentPathToTrajectoryFolder}/trajectoryData.csv",
+                        z_height=z_height)
 
             currentStartPose = Pose(currentPlannedTrajectory.x[0],
                                     currentPlannedTrajectory.y[0],
