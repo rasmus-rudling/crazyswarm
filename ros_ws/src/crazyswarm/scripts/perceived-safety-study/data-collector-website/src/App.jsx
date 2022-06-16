@@ -1,67 +1,17 @@
-import { Box, Typography } from "@mui/material";
-import InputBtn from "components/InputBtn";
 import "./App.css";
 
-import { doc, onSnapshot } from "firebase/firestore";
-import { useEffect, useState } from "react";
-import { db } from "utils/fb";
+import DataCollection from "pages/DataCollection";
+import ResetEvaluation from "pages/ResetEvaluation";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 const App = () => {
-  const [perceivedSafety, setPerceivedSafety] = useState(99);
-
-  useEffect(() => {
-    return onSnapshot(doc(db, "participantData", "1"), (doc) => {
-      setPerceivedSafety(doc.data().perceivedSafety);
-    });
-  }, []);
-
-  const scoreToComment = {
-    "-3": "Too unsafe",
-    0: "Perfect",
-    3: "Too safe",
-  };
-
   return (
-    <div className="App">
-      {-3 <= perceivedSafety && perceivedSafety <= 3 ? (
-        <Typography variant="h5" sx={{ textAlign: "center", mt: "250px" }}>
-          Your answer: {perceivedSafety}{" "}
-          {scoreToComment[perceivedSafety] &&
-            `(${scoreToComment[perceivedSafety]})`}
-        </Typography>
-      ) : (
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            flexDirection: "column",
-            justifyContent: "center",
-            pt: "10px",
-            rowGap: "20px",
-            flexWrap: "wrap",
-            width: "100%",
-          }}
-        >
-          <Typography
-            variant="h4"
-            sx={{
-              textAlign: "center",
-              fontSize: "30px",
-            }}
-          >
-            How did you perceive the most recent trajectory?
-          </Typography>
-
-          <InputBtn number={-3} text="too unsafe" />
-          <InputBtn number={-2} />
-          <InputBtn number={-1} />
-          <InputBtn number={0} text="perfect" />
-          <InputBtn number={1} />
-          <InputBtn number={2} />
-          <InputBtn number={3} text="too safe" />
-        </Box>
-      )}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/reset" element={<ResetEvaluation />} />
+        <Route path="/" element={<DataCollection />} />
+      </Routes>
+    </Router>
   );
 };
 
