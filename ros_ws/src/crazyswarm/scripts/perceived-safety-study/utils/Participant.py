@@ -9,39 +9,6 @@ from globalVariables import PATH_TO_ROOT
 import itertools
 
 
-def balancedLatinSquare(array, participantId):
-    result = []
-    j = 0
-    h = 0
-
-    for i in range(len(array)):
-        val = 0
-
-        if (i < 2 or i % 2 != 0):
-            val = j
-            j += 1
-        else:
-            val = len(array) - h - 1
-            h += 1
-
-        idx = (val + participantId) % len(array)
-        result.append(array[idx])
-
-    if (len(array) % 2 != 0 and participantId % 2 != 0):
-        result = sorted(result, reverse=True)
-
-    return result
-
-
-PREVIOUS_DRONE_EXPERIENCE = {
-    "1": "Yes, I've controlled at least one drone myself",
-    "2": "Yes, I've seen at least one other person control a drone in person",
-    "3":
-    "No, but I've seen drones through the internet (via videos, games, etc.)",
-    "4": "No",
-}
-
-
 class Participant:
     CSV_PATH = f"{PATH_TO_ROOT}/utils/participants.csv"
 
@@ -206,23 +173,19 @@ class Participant:
         np.random.seed(0)
         np.random.shuffle(allPermutations)
 
-        participantOrder = allPermutations[pID]
+        firstSFCounter = {"1": 0, "2": 0, "3": 0}
+        allOrders = []
+
+        for permutation in allPermutations:
+            firstSF = permutation[0]
+
+            if firstSFCounter[firstSF] < 5:
+                allOrders.append(list(permutation))
+                firstSFCounter[firstSF] += 1
+
+        participantOrder = allOrders[pID]
 
         return "|".join(participantOrder)
-
-    @staticmethod
-    def getLatinSquareSFOrder(pID):
-        conditions = [
-            "1",
-            "2",
-            "3",
-            "1",
-            "2",
-            "3",
-        ]
-        safetyFunctions = balancedLatinSquare(conditions, pID)
-
-        return "|".join(safetyFunctions)
 
     @classmethod
     def fromTerminalInput(cls: "Participant"):
