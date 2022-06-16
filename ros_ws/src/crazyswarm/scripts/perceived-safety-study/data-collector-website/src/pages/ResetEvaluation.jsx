@@ -26,6 +26,12 @@ const ResetEvaluation = () => {
           rowGap: "20px",
           flexWrap: "wrap",
           width: "100%",
+          backgroundColor: perceivedSafety === 99 ? "white" : "red",
+          position: "absolute",
+          top: "0px",
+          right: "0px",
+          bottom: "0px",
+          left: "0px",
         }}
       >
         <Typography
@@ -33,12 +39,27 @@ const ResetEvaluation = () => {
           sx={{
             textAlign: "center",
             fontSize: "30px",
+            color: "white",
+            px: "10px",
           }}
         >
-          Press the button to reset the answer
+          Currently selected perceived safety:
         </Typography>
 
-        <InputBtn number={99} text="Reset" />
+        <Typography
+          variant="h4"
+          sx={{
+            textAlign: "center",
+            fontSize: "200px",
+            color: "white",
+          }}
+        >
+          {perceivedSafety}
+        </Typography>
+
+        {perceivedSafety !== 99 && (
+          <InputBtn number={99} text="Reset" sx={{ py: "30px" }} />
+        )}
       </Box>
     </div>
   );

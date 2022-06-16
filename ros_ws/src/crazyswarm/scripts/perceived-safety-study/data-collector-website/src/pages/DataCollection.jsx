@@ -23,11 +23,19 @@ const DataCollection = () => {
   return (
     <div>
       {-3 <= perceivedSafety && perceivedSafety <= 3 ? (
-        <Typography variant="h5" sx={{ textAlign: "center", mt: "250px" }}>
-          Your answer: {perceivedSafety}{" "}
-          {scoreToComment[perceivedSafety] &&
-            `(${scoreToComment[perceivedSafety]})`}
-        </Typography>
+        <>
+          <Typography variant="h5" sx={{ textAlign: "center", mt: "175px" }}>
+            Your answer:
+          </Typography>
+          <Typography
+            variant="h5"
+            sx={{ textAlign: "center", fontSize: "100px" }}
+          >
+            {perceivedSafety}{" "}
+            {scoreToComment[perceivedSafety] &&
+              `(${scoreToComment[perceivedSafety]})`}
+          </Typography>
+        </>
       ) : (
         <Box
           sx={{

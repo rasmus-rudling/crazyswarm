@@ -55,9 +55,8 @@ class GaussianProcess:
 
     def initGP(self):
         noise_std = 0.75
-        kernel = 1 * RBF()
 
-        self.gp = GaussianProcessRegressor(kernel=kernel,
+        self.gp = GaussianProcessRegressor(kernel=RBF(),
                                            alpha=noise_std**2,
                                            n_restarts_optimizer=5)
 
@@ -225,6 +224,7 @@ class GaussianProcess:
         plt.show()
 
     def getperceivedSafety(self):
+
         def approvedRating(rating):
             return -MAX_INPUT_VAL <= rating and rating <= MAX_INPUT_VAL
 
