@@ -6,11 +6,7 @@ from pandas import array
 from helpers import userInput
 from globalVariables import PATH_TO_ROOT
 
-# How to use:
-# var conditions = ["A", "B", "C", "D"]
-# balancedLatinSquare(conditions, 0)  //=> ["A", "B", "D", "C"]
-# balancedLatinSquare(conditions, 1)  //=> ["B", "C", "A", "D"]
-# balancedLatinSquare(conditions, 2)  //=> ["C", "D", "B", "A"]
+import itertools
 
 
 def balancedLatinSquare(array, participantId):
@@ -191,7 +187,7 @@ class Participant:
         return p
 
     @staticmethod
-    def getRandomSFOrder():
+    def getRandomSFOrderOld():
         possibleSafetyFunctions = ["1", "2", "3"]
 
         safetyFunctions = []
@@ -204,6 +200,19 @@ class Participant:
         shuffle(safetyFunctions)
 
         return "|".join(safetyFunctions)
+
+    @staticmethod
+    def getRandomSFOrder(pID):
+        possibleSafetyFunctions = ["1", "2", "3", "1", "2", "3"]
+
+        allPermutations = list(itertools.permutations(possibleSafetyFunctions))
+
+        np.random.seed(0)
+        np.random.shuffle(allPermutations)
+
+        participantOrder = allPermutations[pID]
+
+        return "|".join(participantOrder)
 
     @staticmethod
     def getLatinSquareSFOrder(pID):
@@ -246,7 +255,7 @@ class Participant:
                              height=height,
                              previousDroneExperience=previousDroneExperience,
                              email=email,
-                             sfOrder=Participant.getLatinSquareSFOrder(id),
+                             sfOrder=Participant.getRandomSFOrder(id),
                              evaluation="")
 
         return newParticipant
