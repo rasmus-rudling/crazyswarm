@@ -1,7 +1,6 @@
-a = ""
-b = "1"
-c = "1|2|3"
+from Participant import Participant
 
-print(a.split("|"))
-print(b.split("|"))
-print(c.split("|"))
+for i in range(15):
+    a = Participant.getRandomSFOrder(5)
+
+    print(a)

@@ -6,11 +6,7 @@ from pandas import array
 from helpers import userInput
 from globalVariables import PATH_TO_ROOT
 
-# How to use:
-# var conditions = ["A", "B", "C", "D"]
-# balancedLatinSquare(conditions, 0)  //=> ["A", "B", "D", "C"]
-# balancedLatinSquare(conditions, 1)  //=> ["B", "C", "A", "D"]
-# balancedLatinSquare(conditions, 2)  //=> ["C", "D", "B", "A"]
+import itertools
 
 
 def balancedLatinSquare(array, participantId):
@@ -49,14 +45,13 @@ PREVIOUS_DRONE_EXPERIENCE = {
 class Participant:
     CSV_PATH = f"{PATH_TO_ROOT}/utils/participants.csv"
 
-    def __init__(self, id, firstName, lastName, gender, height,
-                 previousDroneExperience, email, sfOrder, evaluation):
+    def __init__(self, id, firstName, lastName, gender, height, email, sfOrder,
+                 evaluation):
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
         self.gender = gender
         self.height = height
-        self.previousDroneExperience = previousDroneExperience
         self.email = email
         self.sfOrder = sfOrder
         self.evaluation = evaluation
@@ -85,8 +80,8 @@ class Participant:
             writer = csv.writer(f)
 
             header = [
-                "id", "firstName", "lastName", "gender", "height",
-                "previousDroneExperience", "email", "sfOrder", "evaluation"
+                "id", "firstName", "lastName", "gender", "height", "email",
+                "sfOrder", "evaluation"
             ]
             writer.writerow(header)
 
@@ -94,9 +89,7 @@ class Participant:
                 writer.writerow([
                     participant.id, participant.firstName,
                     participant.lastName, participant.gender,
-                    participant.height,
-                    str(participant.previousDroneExperience),
-                    participant.email, participant.sfOrder,
+                    participant.height, participant.email, participant.sfOrder,
                     participant.evaluation
                 ])
 
@@ -143,10 +136,9 @@ class Participant:
                                     lastName=participantData[2],
                                     gender=participantData[3],
                                     height=int(participantData[4]),
-                                    previousDroneExperience=participantData[5],
-                                    email=participantData[6],
-                                    sfOrder=participantData[7],
-                                    evaluation=participantData[8])
+                                    email=participantData[5],
+                                    sfOrder=participantData[6],
+                                    evaluation=participantData[7])
 
                     participants.append(p)
 
@@ -191,7 +183,7 @@ class Participant:
         return p
 
     @staticmethod
-    def getRandomSFOrder():
+    def getRandomSFOrderOld():
         possibleSafetyFunctions = ["1", "2", "3"]
 
         safetyFunctions = []
@@ -204,6 +196,19 @@ class Participant:
         shuffle(safetyFunctions)
 
         return "|".join(safetyFunctions)
+
+    @staticmethod
+    def getRandomSFOrder(pID):
+        possibleSafetyFunctions = ["1", "2", "3", "1", "2", "3"]
+
+        allPermutations = list(itertools.permutations(possibleSafetyFunctions))
+
+        np.random.seed(0)
+        np.random.shuffle(allPermutations)
+
+        participantOrder = allPermutations[pID]
+
+        return "|".join(participantOrder)
 
     @staticmethod
     def getLatinSquareSFOrder(pID):
@@ -233,10 +238,6 @@ class Participant:
         for k, v in PREVIOUS_DRONE_EXPERIENCE.items():
             print(f"    {k}: {v}")
 
-        previousDroneExperienceKey = userInput(
-            "Answer (1-4): ", validAnswers={"1", "2", "3", "4"})
-        previousDroneExperience = PREVIOUS_DRONE_EXPERIENCE[
-            previousDroneExperienceKey]
         email = userInput("Email: ")
 
         newParticipant = cls(id=id,
@@ -244,15 +245,14 @@ class Participant:
                              lastName=lastName,
                              gender=gender,
                              height=height,
-                             previousDroneExperience=previousDroneExperience,
                              email=email,
-                             sfOrder=Participant.getLatinSquareSFOrder(id),
+                             sfOrder=Participant.getRandomSFOrder(id),
                              evaluation="")
 
         return newParticipant
 
     def __str__(self):
-        return f"\nID: {self.id}\nName: {self.firstName} {self.lastName}\nGender: {self.gender}\nHeight: {self.height}cm\nPrevious drone experience? {self.previousDroneExperience}\nEmail: {self.email}"
+        return f"\nID: {self.id}\nName: {self.firstName} {self.lastName}\nGender: {self.gender}\nHeight: {self.height}cm\nEmail: {self.email}"
 
 
 if __name__ == "__main__":
