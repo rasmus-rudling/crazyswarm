@@ -89,7 +89,7 @@ def calcSF1():
         except:
             pass
 
-        recordFinalTrajectory(finalDroneState, planner)
+        # recordFinalTrajectory(finalDroneState, planner)
 
 
 def calcSF2():
@@ -121,7 +121,7 @@ def calcSF2():
         except:
             pass
 
-        recordFinalTrajectory(finalDroneState, planner)
+        # recordFinalTrajectory(finalDroneState, planner)
 
 
 def calcSF3():
@@ -155,10 +155,10 @@ def calcSF3():
                         planner=planner)
         trajectory.saveToCsv(f"{filePath}/trajectoryData.csv")
 
-        recordFinalTrajectory(finalDroneState,
-                              planner,
-                              onlyFinalFrame=True,
-                              fileName="trajectory")
+        # recordFinalTrajectory(finalDroneState,
+        #                       planner,
+        #                       onlyFinalFrame=True,
+        #                       fileName="trajectory")
 
 
 def stage1():

@@ -233,11 +233,6 @@ class Participant:
         gender = userInput("Gender: ")
         height = userInput("Height (in cm): ", int)
 
-        print("Previous drone experience?")
-
-        for k, v in PREVIOUS_DRONE_EXPERIENCE.items():
-            print(f"    {k}: {v}")
-
         email = userInput("Email: ")
 
         newParticipant = cls(id=id,

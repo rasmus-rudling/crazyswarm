@@ -24,7 +24,6 @@ import numpy as np
 from position import Position
 from utils.globalVariables import PATH_TO_ROOT
 
-np.random.seed(0)
 import seaborn as sns
 
 sns.set_theme()
@@ -251,8 +250,6 @@ def plotPathToCurrentDroneStateLive(droneState: "DroneState",
                            droneState,
                            isFinalDroneState=isFinalDroneState,
                            planner=planner)
-    # uniform_data = np.random.rand(10, 12)
-    # ax = sns.heatmap(uniform_data)
 
     if planner.sf.name == "heuristic":
         h = planner.HUMAN
