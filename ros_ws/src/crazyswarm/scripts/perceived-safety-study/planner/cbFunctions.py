@@ -56,6 +56,7 @@ class CBF:
 
 
 class HeuristicSafetyFunction:
+
     def __init__(self, cbf: "CBF" = None):
         self.name = "heuristic"
         self.zoneLimits = np.array([0.45, 1.2, 3.6, 7.6])
@@ -98,8 +99,6 @@ class HeuristicSafetyFunction:
 
     def velocityIsApprovedForCurrentDistance(self, distance, velocity,
                                              droneRadius, humanRadius):
-        # reversedLimits = sorted(self.zoneLimits, reverse=True)
-        # reversedVelocities = np.array(sorted(self.velocitiesWithinZone, reverse=True))
 
         diffs = self.velocitiesWithinZone - velocity
         minDistance = 99999999
@@ -108,11 +107,6 @@ class HeuristicSafetyFunction:
             if diff > 0:
                 minDistance = self.zoneLimits[i - 1]
                 break
-
-        # appr = distance >= (minDistance + droneRadius)**2 and velocity <= DRONE_MAX_VELOCITY
-        # print(f"{round(velocity, 2)} m/s -> min. D = {minDistance} m | Approved if {round(distance, 2)} ≥ {round((minDistance + droneRadius)**2, 2)} -> {'Approved' if appr else 'Denied'}")
-
-        # sleep(0.25)
 
         return distance >= (minDistance +
                             droneRadius)**2 and velocity <= DRONE_MAX_VELOCITY
