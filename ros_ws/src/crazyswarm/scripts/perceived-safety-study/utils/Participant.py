@@ -45,14 +45,13 @@ PREVIOUS_DRONE_EXPERIENCE = {
 class Participant:
     CSV_PATH = f"{PATH_TO_ROOT}/utils/participants.csv"
 
-    def __init__(self, id, firstName, lastName, gender, height,
-                 previousDroneExperience, email, sfOrder, evaluation):
+    def __init__(self, id, firstName, lastName, gender, height, email, sfOrder,
+                 evaluation):
         self.id = id
         self.firstName = firstName
         self.lastName = lastName
         self.gender = gender
         self.height = height
-        self.previousDroneExperience = previousDroneExperience
         self.email = email
         self.sfOrder = sfOrder
         self.evaluation = evaluation
@@ -81,8 +80,8 @@ class Participant:
             writer = csv.writer(f)
 
             header = [
-                "id", "firstName", "lastName", "gender", "height",
-                "previousDroneExperience", "email", "sfOrder", "evaluation"
+                "id", "firstName", "lastName", "gender", "height", "email",
+                "sfOrder", "evaluation"
             ]
             writer.writerow(header)
 
@@ -90,9 +89,7 @@ class Participant:
                 writer.writerow([
                     participant.id, participant.firstName,
                     participant.lastName, participant.gender,
-                    participant.height,
-                    str(participant.previousDroneExperience),
-                    participant.email, participant.sfOrder,
+                    participant.height, participant.email, participant.sfOrder,
                     participant.evaluation
                 ])
 
@@ -139,10 +136,9 @@ class Participant:
                                     lastName=participantData[2],
                                     gender=participantData[3],
                                     height=int(participantData[4]),
-                                    previousDroneExperience=participantData[5],
-                                    email=participantData[6],
-                                    sfOrder=participantData[7],
-                                    evaluation=participantData[8])
+                                    email=participantData[5],
+                                    sfOrder=participantData[6],
+                                    evaluation=participantData[7])
 
                     participants.append(p)
 
@@ -242,10 +238,6 @@ class Participant:
         for k, v in PREVIOUS_DRONE_EXPERIENCE.items():
             print(f"    {k}: {v}")
 
-        previousDroneExperienceKey = userInput(
-            "Answer (1-4): ", validAnswers={"1", "2", "3", "4"})
-        previousDroneExperience = PREVIOUS_DRONE_EXPERIENCE[
-            previousDroneExperienceKey]
         email = userInput("Email: ")
 
         newParticipant = cls(id=id,
@@ -253,7 +245,6 @@ class Participant:
                              lastName=lastName,
                              gender=gender,
                              height=height,
-                             previousDroneExperience=previousDroneExperience,
                              email=email,
                              sfOrder=Participant.getRandomSFOrder(id),
                              evaluation="")
@@ -261,7 +252,7 @@ class Participant:
         return newParticipant
 
     def __str__(self):
-        return f"\nID: {self.id}\nName: {self.firstName} {self.lastName}\nGender: {self.gender}\nHeight: {self.height}cm\nPrevious drone experience? {self.previousDroneExperience}\nEmail: {self.email}"
+        return f"\nID: {self.id}\nName: {self.firstName} {self.lastName}\nGender: {self.gender}\nHeight: {self.height}cm\nEmail: {self.email}"
 
 
 if __name__ == "__main__":
