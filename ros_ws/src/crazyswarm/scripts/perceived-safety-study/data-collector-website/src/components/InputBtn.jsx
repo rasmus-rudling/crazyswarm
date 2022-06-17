@@ -6,7 +6,7 @@ const InputBtn = ({ number, text, sx }) => {
   let currentSx = {
     width: "100%",
     py: "8px",
-    fontSize: "25px",
+    fontSize: "15px",
   };
 
   if (sx) currentSx = { ...currentSx, ...sx };

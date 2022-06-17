@@ -16,8 +16,8 @@ const DataCollection = () => {
 
   const scoreToComment = {
     "-3": "Too unsafe",
-    0: "Perfect",
-    3: "Too safe",
+    0: "Perfectly safe",
+    3: "Overly safe",
   };
 
   return (
@@ -44,7 +44,7 @@ const DataCollection = () => {
             flexDirection: "column",
             justifyContent: "center",
             pt: "10px",
-            rowGap: "20px",
+            rowGap: "15px",
             flexWrap: "wrap",
             width: "100%",
           }}
@@ -59,13 +59,43 @@ const DataCollection = () => {
             How did you perceive the most recent trajectory?
           </Typography>
 
+          <Box
+            sx={{
+              mt: "-25px",
+              mb: "-20px",
+            }}
+          >
+            <ul>
+              <li>
+                <Typography>
+                  <b>-3 (too unsafe):</b> if you feel like the drone flew too
+                  fast and uncomfortably close to you
+                </Typography>
+              </li>
+
+              <li>
+                <Typography>
+                  <b>0 (perfectly safe):</b> if you think the drone flew at an
+                  ideal distance away from you with an ideal velocity
+                </Typography>
+              </li>
+
+              <li>
+                <Typography>
+                  <b>3 (overly safe):</b> if you feel like the drone flew too
+                  slow and unnecessarily far away from you
+                </Typography>
+              </li>
+            </ul>
+          </Box>
+
           <InputBtn number={-3} text="too unsafe" />
           <InputBtn number={-2} />
           <InputBtn number={-1} />
-          <InputBtn number={0} text="perfect" />
+          <InputBtn number={0} text="perfectly safe" />
           <InputBtn number={1} />
           <InputBtn number={2} />
-          <InputBtn number={3} text="too safe" />
+          <InputBtn number={3} text="overly safe" />
         </Box>
       )}
     </div>
