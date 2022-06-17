@@ -183,7 +183,8 @@ class Participant:
                 allOrders.append(list(permutation))
                 firstSFCounter[firstSF] += 1
 
-        participantOrder = allOrders[pID]
+        id = pID - 3
+        participantOrder = allOrders[id]
 
         return "|".join(participantOrder)
 
@@ -198,13 +199,16 @@ class Participant:
 
         email = userInput("Email: ")
 
+        sfOrder = Participant.getRandomSFOrder(
+            id) if id > 2 else Participant.getRandomSFOrder(3)
+
         newParticipant = cls(id=id,
                              firstName=firstName,
                              lastName=lastName,
                              gender=gender,
                              height=height,
                              email=email,
-                             sfOrder=Participant.getRandomSFOrder(id),
+                             sfOrder=sfOrder,
                              evaluation="")
 
         return newParticipant
