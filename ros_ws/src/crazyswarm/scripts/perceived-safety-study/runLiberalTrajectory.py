@@ -71,8 +71,3 @@ if __name__ == "__main__":
 
     droneController = CrazyflieController()
     droneController.executeStandardTrajectory(t)
-
-    # - Runs -
-    # Init: 5.553s
-    # After CBF-update: 4.948s, 5.002s, 4.955s
-    # After distance-update: 4.948s, 5.002s, 4.955s
