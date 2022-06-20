@@ -43,16 +43,17 @@ MAX_INPUT_VAL = 3
 
 
 class GPValue:
-    def __init__(self, aMaxIdx, epsIdx, aMax, eps, safety):
+    def __init__(self, aMaxIdx, epsIdx, aMax, eps, safety, std):
         self.aMaxIdx = aMaxIdx
         self.epsIdx = epsIdx
         self.aMax = aMax
         self.eps = eps
         self.safety = safety
+        self.std = std
 
     def __str__(self):
         # return f"aMaxIdx={self.aMaxIdx}\nepsIdx={self.epsIdx}\naMax={self.aMax}\neps={self.eps}\nsafety={self.safety}"
-        return f"safety={self.safety}"
+        return f"safety={self.safety}\nstd={self.std}\naMax={self.aMax}\neps={self.eps}"
 
 
 class GaussianProcess:
@@ -215,6 +216,9 @@ class GaussianProcess:
         ax = plt.axes(projection='3d')
 
         X, Y = np.meshgrid(self.epsilonRange, self.decelerationMaxRange)
+        xx = np.vstack((X.flatten(), Y.flatten())).T
+
+        p = self.gp.predict(xx).reshape(len(X), len(Y))
 
         ax.set_xlabel("Epsilon")
         ax.set_ylabel("Max deceleration")
@@ -224,17 +228,28 @@ class GaussianProcess:
 
         ax.plot_surface(X,
                         Y,
-                        self.predictions,
+                        p,
                         rstride=1,
                         cstride=1,
                         cmap='viridis',
-                        edgecolor='none')
+                        edgecolor='none',
+                        alpha=0.5)
+
+        # ax.scatter3D(self.bestGPcombo.eps,
+        #              self.bestGPcombo.aMax,
+        #              self.bestGPcombo.safety,
+        #              color="red",
+        #              s=10,
+        #              marker="o")
+
+        ax.contour(X, Y, p, [0.0])
 
         plt.draw()
 
         if len(sys.argv) > 1 and sys.argv[1] == "plot":
             plt.pause(9999999999999)
 
+        # plt.pause(99999)
         plt.show()
 
     def getperceivedSafety(self):
@@ -426,17 +441,25 @@ class GaussianProcess:
         def getScore(gpValue):
             return abs(gpValue.safety)
 
+        def getStd(gpValue):
+            return gpValue.std
+
+        def getAMax(gpValue):
+            return gpValue.aMax
+
         self.updatePredictions()
 
         gpValues = []
 
         for epsIdx, eps in enumerate(self.epsilonRange):
             for aMaxIdx, aMax in enumerate(self.decelerationMaxRange):
-                gpValue = GPValue(aMaxIdx=aMaxIdx,
-                                  epsIdx=epsIdx,
-                                  aMax=aMax,
-                                  eps=eps,
-                                  safety=self.predictions[epsIdx][aMaxIdx])
+                gpValue = GPValue(
+                    aMaxIdx=aMaxIdx,
+                    epsIdx=epsIdx,
+                    aMax=aMax,
+                    eps=eps,
+                    safety=self.predictions[epsIdx][aMaxIdx],
+                    std=self.standard_deviations[epsIdx][aMaxIdx])
 
                 gpValues.append(gpValue)
 
@@ -446,12 +469,20 @@ class GaussianProcess:
 
         chosenGpValues = gpValues[:numToChoose]
 
-        chosenGPValue = np.random.choice(chosenGpValues)
+        # chosenGpValues.sort(key=getStd, reverse=False)
 
-        print("Chosen pair")
-        print(f"Eps: {chosenGPValue.eps}")
-        print(f"AMax: {chosenGPValue.aMax}")
-        print(f"Safety: {chosenGPValue.safety}")
+        chosenGPValue = np.random.choice(chosenGpValues)
+        # chosenGPValue = chosenGpValues[0]
+        # self.bestGPcombo = chosenGPValue
+
+        # for i, r in enumerate(chosenGpValues):
+        #     print(f"\n{i}")
+        #     print(r)
+
+        # print("\nChosen pair")
+        # print(chosenGPValue)
+
+        # self.plotCurrentPredictionAs3d()
 
         self.bestParameterPair[-1] = [chosenGPValue.eps, chosenGPValue.aMax]
         self.updateCsv()
