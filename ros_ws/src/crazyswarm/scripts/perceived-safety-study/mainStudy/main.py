@@ -44,7 +44,18 @@ def computeBestParameterPairSF2():
 
 
 def computeBestParameterPairSF3():
-    pass
+    participantId = int(sys.argv[2])
+
+    gp = GaussianProcess(
+        pID=participantId,
+        safetyFunction=f"sf3.{participantId}",
+        csvFileName=
+        f"participants/{participantId}/sf3.{participantId} - input.csv",
+        savedTrajectoriesDir=
+        f"{PATH_TO_ROOT}/mainStudy/participants/{participantId}/savedTrajectories"
+    )
+
+    gp.setBestParameterPair()
 
 
 def getSf2():
