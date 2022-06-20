@@ -1,4 +1,5 @@
 from itertools import product
+import random
 import sys
 
 sys.path.append(
@@ -39,6 +40,19 @@ from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF
 
 MAX_INPUT_VAL = 3
+
+
+class GPValue:
+    def __init__(self, aMaxIdx, epsIdx, aMax, eps, safety):
+        self.aMaxIdx = aMaxIdx
+        self.epsIdx = epsIdx
+        self.aMax = aMax
+        self.eps = eps
+        self.safety = safety
+
+    def __str__(self):
+        # return f"aMaxIdx={self.aMaxIdx}\nepsIdx={self.epsIdx}\naMax={self.aMax}\neps={self.eps}\nsafety={self.safety}"
+        return f"safety={self.safety}"
 
 
 class GaussianProcess:
@@ -224,7 +238,6 @@ class GaussianProcess:
         plt.show()
 
     def getperceivedSafety(self):
-
         def approvedRating(rating):
             return -MAX_INPUT_VAL <= rating and rating <= MAX_INPUT_VAL
 
@@ -408,6 +421,40 @@ class GaussianProcess:
             plannedTrajectory.plotTrajectory(
                 otherTrajectory=recordingOfPlannedTrajectory,
                 fileName=f"{pathToTrajectoryFolder}/executedTrajectory")
+
+    def setBestParameterPair(self):
+        def getScore(gpValue):
+            return abs(gpValue.safety)
+
+        self.updatePredictions()
+
+        gpValues = []
+
+        for epsIdx, eps in enumerate(self.epsilonRange):
+            for aMaxIdx, aMax in enumerate(self.decelerationMaxRange):
+                gpValue = GPValue(aMaxIdx=aMaxIdx,
+                                  epsIdx=epsIdx,
+                                  aMax=aMax,
+                                  eps=eps,
+                                  safety=self.predictions[epsIdx][aMaxIdx])
+
+                gpValues.append(gpValue)
+
+        numToChoose = 15
+
+        gpValues.sort(key=getScore)
+
+        chosenGpValues = gpValues[:numToChoose]
+
+        chosenGPValue = np.random.choice(chosenGpValues)
+
+        print("Chosen pair")
+        print(f"Eps: {chosenGPValue.eps}")
+        print(f"AMax: {chosenGPValue.aMax}")
+        print(f"Safety: {chosenGPValue.safety}")
+
+        self.bestParameterPair[-1] = [chosenGPValue.eps, chosenGPValue.aMax]
+        self.updateCsv()
 
 
 def main():

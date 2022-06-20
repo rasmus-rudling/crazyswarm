@@ -33,6 +33,20 @@ initDroneState = Position(x=DRONE_START_X, y=DRONE_START_Y)
 goalState = DroneGoalState(x=x2, y=y2, radius=0.1)
 
 
+def computeBestParameterPairSF2():
+    gp = GaussianProcess(
+        pID=0,
+        safetyFunction="sf2",
+        csvFileName=f"{PATH_TO_ROOT}/preStudy/sf2 - input.csv",
+        savedTrajectoriesDir=f"{PATH_TO_ROOT}/preStudy/savedTrajectories")
+
+    gp.setBestParameterPair()
+
+
+def computeBestParameterPairSF3():
+    pass
+
+
 def getSf2():
     with open(f"{PATH_TO_ROOT}/preStudy/sf2 - input.csv",
               newline='') as csvfile:
@@ -89,7 +103,7 @@ def calcSF1():
         except:
             pass
 
-        # recordFinalTrajectory(finalDroneState, planner)
+        recordFinalTrajectory(finalDroneState, planner)
 
 
 def calcSF2():
@@ -121,7 +135,7 @@ def calcSF2():
         except:
             pass
 
-        # recordFinalTrajectory(finalDroneState, planner)
+        recordFinalTrajectory(finalDroneState, planner)
 
 
 def calcSF3():
@@ -155,10 +169,10 @@ def calcSF3():
                         planner=planner)
         trajectory.saveToCsv(f"{filePath}/trajectoryData.csv")
 
-        # recordFinalTrajectory(finalDroneState,
-        #                       planner,
-        #                       onlyFinalFrame=True,
-        #                       fileName="trajectory")
+        recordFinalTrajectory(finalDroneState,
+                              planner,
+                              onlyFinalFrame=True,
+                              fileName="trajectory")
 
 
 def stage1():
@@ -251,3 +265,7 @@ if __name__ == "__main__":
             calcSF3()
         elif a == "s2":
             stage2()
+        elif a == "bppSF2":
+            computeBestParameterPairSF2()
+        elif a == "bppSF3":
+            computeBestParameterPairSF3()
