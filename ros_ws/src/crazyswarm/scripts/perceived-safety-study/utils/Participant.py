@@ -184,7 +184,10 @@ class Participant:
                 firstSFCounter[firstSF] += 1
 
         id = pID - 3
-        participantOrder = allOrders[id]
+        try:
+            participantOrder = allOrders[id]
+        except:
+            participantOrder = ["1", "2", "3", "1", "2", "3"]
 
         return "|".join(participantOrder)
 
