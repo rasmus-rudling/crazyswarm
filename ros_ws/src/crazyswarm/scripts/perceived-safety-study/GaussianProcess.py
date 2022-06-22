@@ -233,14 +233,16 @@ class GaussianProcess:
                         cstride=1,
                         cmap='viridis',
                         edgecolor='none',
-                        alpha=0.5)
+                        alpha=0.75,
+                        zorder=100)
 
-        # ax.scatter3D(self.bestGPcombo.eps,
-        #              self.bestGPcombo.aMax,
-        #              self.bestGPcombo.safety,
-        #              color="red",
-        #              s=10,
-        #              marker="o")
+        ax.scatter3D(self.bestParameterPair[-1][0],
+                     self.bestParameterPair[-1][1],
+                     self.bestPerceivedSafety[-1],
+                     color="red",
+                     s=50,
+                     marker="o",
+                     zorder=500)
 
         ax.contour(X, Y, p, [0.0])
 
