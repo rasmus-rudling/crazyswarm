@@ -79,7 +79,7 @@ if __name__ == "__main__":
     crazyflies_yaml = str({
         'crazyflies': [{
             'channel': 100,
-            'id': 7,
+            'id': 5,
             'initialPosition': [startX, startY, startYaw],
             'type': 'default'
         }]

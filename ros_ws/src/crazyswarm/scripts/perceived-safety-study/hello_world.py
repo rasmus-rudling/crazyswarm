@@ -8,7 +8,7 @@ def main():
     crazyflies_yaml = str({
         'crazyflies': [{
             'channel': 100,
-            'id': 7,
+            'id': 5,
             'initialPosition': [0.0, 0.0, 0.0],
             'type': 'default'
         }]

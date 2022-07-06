@@ -1,6 +1,3 @@
-from cmath import asin
-import math
-import os
 import sys
 
 sys.path.append(
@@ -10,8 +7,7 @@ sys.path.append(
     '/home/rpl/Documents/rasmus/crazyswarm/ros_ws/src/crazyswarm/scripts/perceived-safety-study/utils'
 )
 
-from globalVariables import HEIGHT_OFFSET, PATH_TO_ROOT
-from matplotlib import pyplot as plt
+from globalVariables import PATH_TO_ROOT
 import numpy as np
 from SimpleTrajectory import SimpleTrajectory
 import rospy
@@ -74,7 +70,7 @@ class CrazyflieController:
             crazyflies_yaml = str({
                 'crazyflies': [{
                     'channel': 100,
-                    'id': 7,
+                    'id': 5,
                     'initialPosition': [0, 0, 0],
                     'type': 'default'
                 }]
@@ -137,11 +133,11 @@ class CrazyflieController:
 
     def getCurrentPose(self):
         tf = TransformListener()
-        tf.waitForTransform("/world", "/cf7", rospy.Time(),
+        tf.waitForTransform("/world", "/cf5", rospy.Time(),
                             rospy.Duration(4.0))
 
-        t = tf.getLatestCommonTime("/world", "/cf7")
-        initPosition, q = tf.lookupTransform('/world', "/cf7", t)
+        t = tf.getLatestCommonTime("/world", "/cf5")
+        initPosition, q = tf.lookupTransform('/world', "/cf5", t)
 
         quaternion = Quaternion(q[0], q[1], q[2], q[3])
         x, y, z = initPosition
@@ -331,15 +327,13 @@ def flight4(droneController: "CrazyflieController"):
 
 
 def flight5(droneController: "CrazyflieController"):
-    goalPose = Pose(0, 0, 1.5, np.deg2rad(180))
+    goalPose = Pose(-0.5, -0.5, 1.4, np.deg2rad(0))
     trajecoryToHoverPose = droneController.getTrajectoryToPose(goalPose,
                                                                velocity=0.5)
 
-    trajecoryToHoverPose.visualize()
-
     recordedTrajectory = droneController.followTrajectory(
         trajecoryToHoverPose)[1]
-    droneController.hover(duration=1)
+    droneController.hover(duration=20)
     droneController.land(velocity=0.5)
 
     trajecoryToHoverPose.plotTrajectory(otherTrajectory=recordedTrajectory)

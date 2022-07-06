@@ -18,7 +18,7 @@ def main():
     crazyflies_yaml = str({
         'crazyflies': [{
             'channel': 100,
-            'id': 7,
+            'id': 5,
             'initialPosition': [0, 0, 0],
             'type': 'default'
         }]
@@ -51,10 +51,10 @@ def main():
 
     # Get init drone position
     tf = TransformListener()
-    tf.waitForTransform("/world", "/cf7", rospy.Time(), rospy.Duration(4.0))
+    tf.waitForTransform("/world", "/cf5", rospy.Time(), rospy.Duration(4.0))
 
-    t = tf.getLatestCommonTime("/world", "/cf7")
-    init_position, quaternion = tf.lookupTransform('/world', '/cf7', t)
+    t = tf.getLatestCommonTime("/world", "/cf5")
+    init_position, quaternion = tf.lookupTransform('/world', '/cf5', t)
 
     init_position = np.array(init_position)
 
@@ -67,8 +67,8 @@ def main():
         drone.cmdPosition(position_command, yaw_d[i])
         timeHelper.sleep(delta)
 
-        t = tf.getLatestCommonTime("/world", "/cf7")
-        record.append(tf.lookupTransform('/world', '/cf7', t)[0][2])
+        t = tf.getLatestCommonTime("/world", "/cf5")
+        record.append(tf.lookupTransform('/world', '/cf5', t)[0][2])
 
     plt.plot(t_d, z_d, "-r")
     plt.plot(t_d, record, "-g")
