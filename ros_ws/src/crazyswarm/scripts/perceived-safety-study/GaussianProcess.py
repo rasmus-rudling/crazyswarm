@@ -41,6 +41,12 @@ from sklearn.gaussian_process.kernels import RBF
 
 MAX_INPUT_VAL = 3
 
+np.random.seed(201)
+
+
+def getScore(gpValue):
+    return abs(gpValue.safety)
+
 
 class GPValue:
     def __init__(self, aMaxIdx, epsIdx, aMax, eps, safety, std):
@@ -244,6 +250,42 @@ class GaussianProcess:
                      marker="o",
                      zorder=500)
 
+        # ------------
+        gpValues = []
+
+        for epsIdx, eps in enumerate(self.epsilonRange):
+            for aMaxIdx, aMax in enumerate(self.decelerationMaxRange):
+                gpValue = GPValue(
+                    aMaxIdx=aMaxIdx,
+                    epsIdx=epsIdx,
+                    aMax=aMax,
+                    eps=eps,
+                    safety=self.predictions[epsIdx][aMaxIdx],
+                    std=self.standard_deviations[epsIdx][aMaxIdx])
+
+                gpValues.append(gpValue)
+
+        numToChoose = 15
+
+        gpValues.sort(key=getScore)
+
+        chosenGpValues = gpValues[:numToChoose]
+
+        for cv in chosenGpValues:
+            sameEps = self.bestParameterPair[-1][0] == cv.eps
+            sameAmax = self.bestParameterPair[-1][1] == cv.aMax
+
+            if (not sameEps and not sameAmax):
+                ax.scatter3D(cv.eps,
+                             cv.aMax,
+                             cv.safety,
+                             color="blue",
+                             s=50,
+                             marker="o",
+                             zorder=500)
+
+        # ------------
+
         ax.contour(X, Y, p, [0.0])
 
         plt.draw()
@@ -440,15 +482,6 @@ class GaussianProcess:
                 fileName=f"{pathToTrajectoryFolder}/executedTrajectory")
 
     def setBestParameterPair(self):
-        def getScore(gpValue):
-            return abs(gpValue.safety)
-
-        def getStd(gpValue):
-            return gpValue.std
-
-        def getAMax(gpValue):
-            return gpValue.aMax
-
         self.updatePredictions()
 
         gpValues = []
@@ -471,20 +504,7 @@ class GaussianProcess:
 
         chosenGpValues = gpValues[:numToChoose]
 
-        # chosenGpValues.sort(key=getStd, reverse=False)
-
         chosenGPValue = np.random.choice(chosenGpValues)
-        # chosenGPValue = chosenGpValues[0]
-        # self.bestGPcombo = chosenGPValue
-
-        # for i, r in enumerate(chosenGpValues):
-        #     print(f"\n{i}")
-        #     print(r)
-
-        # print("\nChosen pair")
-        # print(chosenGPValue)
-
-        # self.plotCurrentPredictionAs3d()
 
         self.bestParameterPair[-1] = [chosenGPValue.eps, chosenGPValue.aMax]
         self.updateCsv()
