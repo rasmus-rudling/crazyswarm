@@ -41,7 +41,7 @@ from sklearn.gaussian_process.kernels import RBF
 
 MAX_INPUT_VAL = 3
 
-np.random.seed(201)
+# np.random.seed(201)
 
 
 def getScore(gpValue):
